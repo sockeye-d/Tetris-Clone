@@ -11,5 +11,16 @@ config_version=5
 [application]
 
 config/name="Tetris Clone"
+run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.0", "Forward Plus")
 config/icon="res://icon.svg"
+
+[display]
+
+window/size/always_on_top=true
+window/stretch/mode="canvas_items"
+
+[rendering]
+
+textures/lossless_compression/force_png=true
+environment/defaults/default_clear_color=Color(0.345098, 0.345098, 0.345098, 1)
