@@ -1,12 +1,13 @@
-[gd_scene load_steps=9 format=3 uid="uid://b8kbt8veoa7vv"]
+[gd_scene load_steps=13 format=3 uid="uid://b8kbt8veoa7vv"]
 
+[ext_resource type="Script" path="res://Background/background.gd" id="1_0dm3k"]
 [ext_resource type="Texture2D" uid="uid://gtcp0bv8kudr" path="res://art/misc/circle.png" id="1_hvj3m"]
 
 [sub_resource type="Shader" id="Shader_jusrg"]
 code = "// NOTE: Shader automatically converted from Godot Engine 4.0.3.stable's StandardMaterial3D.
 
 shader_type spatial;
-render_mode blend_add,depth_draw_opaque,cull_back,diffuse_burley,specular_disabled,unshaded,ambient_light_disabled;
+render_mode blend_mix,depth_draw_opaque,cull_back,diffuse_burley,specular_disabled,unshaded,ambient_light_disabled;
 uniform vec4 albedo : source_color;
 uniform sampler2D texture_albedo : source_color,filter_linear_mipmap,repeat_enable;
 uniform float point_size : hint_range(0,128);
@@ -25,9 +26,11 @@ uniform vec3 uv2_scale;
 uniform vec3 uv2_offset;
 uniform float brightness;
 
+//uniform sampler2D depth : hint_depth_texture;
+
 
 void vertex() {
-	POINT_SIZE=point_size / distance(NODE_POSITION_WORLD, vec3(0))*40.0;
+	POINT_SIZE= point_size / distance(NODE_POSITION_WORLD, CAMERA_POSITION_WORLD)*40.0;
 	UV=UV*uv1_scale.xy+uv1_offset.xy;
 }
 
@@ -62,8 +65,8 @@ void fragment() {
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_gqlxc"]
 render_priority = 0
 shader = SubResource("Shader_jusrg")
-shader_parameter/albedo = Color(1, 1, 1, 1)
-shader_parameter/point_size = 10.0
+shader_parameter/albedo = Color(0.929715, 0.929715, 0.929715, 1)
+shader_parameter/point_size = 25.0
 shader_parameter/roughness = 1.0
 shader_parameter/metallic_texture_channel = Plane(1, 0, 0, 0)
 shader_parameter/specular = 0.5
@@ -72,11 +75,10 @@ shader_parameter/uv1_scale = Vector3(1, 1, 1)
 shader_parameter/uv1_offset = Vector3(0, 0, 0)
 shader_parameter/uv2_scale = Vector3(1, 1, 1)
 shader_parameter/uv2_offset = Vector3(0, 0, 0)
-shader_parameter/brightness = 20.0
+shader_parameter/brightness = 1.0
 shader_parameter/texture_albedo = ExtResource("1_hvj3m")
 
 [sub_resource type="Gradient" id="Gradient_sboxx"]
-interpolation_mode = 2
 offsets = PackedFloat32Array(0, 0.5, 1)
 colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0)
 
@@ -89,8 +91,7 @@ emission_box_extents = Vector3(50, 50, 50)
 direction = Vector3(0, 0, 1)
 spread = 0.0
 gravity = Vector3(0, 0, 0)
-initial_velocity_min = 15.0
-initial_velocity_max = 30.0
+color = Color(1, 1, 1, 0.690196)
 color_ramp = SubResource("GradientTexture1D_a6xri")
 turbulence_enabled = true
 turbulence_noise_strength = 20.0
@@ -99,12 +100,104 @@ turbulence_influence_max = 0.01
 
 [sub_resource type="PointMesh" id="PointMesh_mntwd"]
 
+[sub_resource type="Shader" id="Shader_eoygn"]
+code = "// NOTE: Shader automatically converted from Godot Engine 4.0.3.stable's StandardMaterial3D.
+
+shader_type spatial;
+render_mode blend_add,depth_draw_opaque,cull_back,diffuse_burley,specular_disabled,unshaded,ambient_light_disabled;
+uniform vec4 albedo : source_color;
+uniform sampler2D texture_albedo : source_color,filter_linear_mipmap,repeat_enable;
+uniform float point_size : hint_range(0,128);
+uniform float roughness : hint_range(0,1);
+uniform sampler2D texture_metallic : hint_default_white,filter_linear_mipmap,repeat_enable;
+uniform vec4 metallic_texture_channel;
+uniform sampler2D texture_roughness : hint_roughness_r,filter_linear_mipmap,repeat_enable;
+uniform float specular;
+uniform float metallic;
+uniform sampler2D texture_detail_albedo : source_color,filter_linear_mipmap,repeat_enable;
+uniform sampler2D texture_detail_normal : hint_normal,filter_linear_mipmap,repeat_enable;
+uniform sampler2D texture_detail_mask : hint_default_white,filter_linear_mipmap,repeat_enable;
+uniform vec3 uv1_scale;
+uniform vec3 uv1_offset;
+uniform vec3 uv2_scale;
+uniform vec3 uv2_offset;
+uniform float brightness;
+
+
+void vertex() {
+	POINT_SIZE= point_size;
+	UV=UV*uv1_scale.xy+uv1_offset.xy;
+}
+
+
+
+
+
+
+void fragment() {
+	vec2 base_uv = UV;
+	vec4 albedo_tex = texture(texture_albedo,POINT_COORD);
+	albedo_tex *= COLOR;
+	ALBEDO = albedo.rgb * albedo_tex.rgb;
+	float metallic_tex = dot(texture(texture_metallic,base_uv),metallic_texture_channel);
+	METALLIC = metallic_tex * metallic;
+	vec4 roughness_texture_channel = vec4(1.0,0.0,0.0,0.0);
+	float roughness_tex = dot(texture(texture_roughness,base_uv),roughness_texture_channel);
+	ROUGHNESS = roughness_tex * roughness;
+	SPECULAR = specular;
+	ALPHA *= albedo.a * albedo_tex.a;
+	vec4 detail_tex = texture(texture_detail_albedo,base_uv);
+	vec4 detail_norm_tex = texture(texture_detail_normal,base_uv);
+	vec4 detail_mask_tex = texture(texture_detail_mask,base_uv);
+	vec3 detail = mix(ALBEDO.rgb,detail_tex.rgb,detail_tex.a);
+	vec3 detail_norm = mix(NORMAL_MAP,detail_norm_tex.rgb,detail_tex.a);
+	NORMAL_MAP = mix(NORMAL_MAP,detail_norm,detail_mask_tex.r);
+	ALBEDO.rgb = mix(ALBEDO.rgb,detail,detail_mask_tex.r);
+	ALBEDO.rgb *= brightness;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ueuwh"]
+render_priority = 0
+shader = SubResource("Shader_eoygn")
+shader_parameter/albedo = Color(1, 1, 1, 1)
+shader_parameter/point_size = 2.0
+shader_parameter/roughness = 1.0
+shader_parameter/metallic_texture_channel = Plane(1, 0, 0, 0)
+shader_parameter/specular = 0.5
+shader_parameter/metallic = 0.0
+shader_parameter/uv1_scale = Vector3(1, 1, 1)
+shader_parameter/uv1_offset = Vector3(0, 0, 0)
+shader_parameter/uv2_scale = Vector3(1, 1, 1)
+shader_parameter/uv2_offset = Vector3(0, 0, 0)
+shader_parameter/brightness = 20.0
+shader_parameter/texture_albedo = ExtResource("1_hvj3m")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_ojpni"]
+emission_shape = 3
+emission_box_extents = Vector3(50, 50, 50)
+direction = Vector3(0, 0, 1)
+gravity = Vector3(0, 0, 0)
+initial_velocity_min = 5.0
+initial_velocity_max = 5.0
+color = Color(1, 1, 1, 0.784314)
+color_ramp = SubResource("GradientTexture1D_a6xri")
+hue_variation_min = -1.0
+hue_variation_max = 1.0
+turbulence_enabled = true
+turbulence_noise_strength = 20.0
+turbulence_noise_speed = Vector3(0, 0, 0.1)
+turbulence_influence_min = 1.0
+turbulence_influence_max = 1.0
+
 [sub_resource type="Environment" id="Environment_mplc6"]
 background_mode = 1
 
 [node name="Background" type="SubViewport"]
 transparent_bg = true
 size = Vector2i(1920, 1080)
+script = ExtResource("1_0dm3k")
+SPEED = Vector3(0, 0, -25)
 
 [node name="GPUParticles3D" type="GPUParticles3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -98.984)
@@ -112,9 +205,24 @@ material_override = SubResource("ShaderMaterial_gqlxc")
 gi_mode = 0
 amount = 500
 lifetime = 5.0
+preprocess = 2.0
+fixed_fps = 0
+interpolate = false
 visibility_aabb = AABB(-70.4693, -66.4501, -47.2473, 133.037, 132.45, 234.29)
 trail_lifetime = 2.23
 process_material = SubResource("ParticleProcessMaterial_y70sq")
+draw_pass_1 = SubResource("PointMesh_mntwd")
+
+[node name="GPUParticles3D2" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -98.984)
+material_override = SubResource("ShaderMaterial_ueuwh")
+gi_mode = 0
+amount = 10000
+lifetime = 5.0
+preprocess = 2.0
+visibility_aabb = AABB(-70.4693, -66.4501, -47.2473, 133.037, 132.45, 234.29)
+trail_lifetime = 2.23
+process_material = SubResource("ParticleProcessMaterial_ojpni")
 draw_pass_1 = SubResource("PointMesh_mntwd")
 
 [node name="Camera3D" type="Camera3D" parent="."]
