@@ -80,10 +80,11 @@ shader_parameter/texture_albedo = ExtResource("1_hvj3m")
 
 [sub_resource type="Gradient" id="Gradient_sboxx"]
 offsets = PackedFloat32Array(0, 0.5, 1)
-colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0)
+colors = PackedColorArray(1, 1, 1, 0, 100, 100, 100, 1, 1, 1, 1, 0)
 
 [sub_resource type="GradientTexture1D" id="GradientTexture1D_a6xri"]
 gradient = SubResource("Gradient_sboxx")
+use_hdr = true
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_y70sq"]
 emission_shape = 3
@@ -195,7 +196,7 @@ background_mode = 1
 
 [node name="Background" type="SubViewport"]
 transparent_bg = true
-size = Vector2i(1920, 1080)
+size = Vector2i(960, 960)
 script = ExtResource("1_0dm3k")
 SPEED = Vector3(0, 0, -25)
 

@@ -1,9 +1,16 @@
 extends Node2D
 
+signal lines_cleared(lines: PackedInt64Array)
+
 @export var GAMEBOARD: TileMap
 @export var HALF_BOARD_SIZE: Vector2i = Vector2i(5, 10)
 @export var TILE_TO_ATLAS: Dictionary = { 0: Vector2i(3, 0), 1: Vector2i(4, 0)}
 @export var DROP_SPEED: float = 0.1
+@export var FALL_LOCK_MAX: int = 1
+@export var MOVE_INTERVAL: float = 0.1
+@export var LINE_CLEAR_EFFECT: PackedScene
+
+const Tetronimo = preload("res://tetronimo.gd")
 
 const TETRONIMOES: Dictionary = {
 		# I tetronimo
@@ -81,27 +88,35 @@ const KICK_OFFSETS: Dictionary = {
 		6: JLSTZ_KICK_OFFSETS,
 }
 
-const Tetronimo = preload("res://tetronimo.gd")
-
 var gameboard_array: Array = []
 var gameboard_size: Vector2i
 
+var bag: Array
+var hold: int
+
+var fall_time: float
 var fall_speed: float
+var fall_lock: int
 
 var current_piece: Tetronimo
 var current_piece_array: Array
-var fall_time: float
+
+var move_time: float
 
 func _ready() -> void:
 	fall_speed = 0.5
 	gameboard_size = HALF_BOARD_SIZE * 2
 	GAMEBOARD.clear()
-	_construct_gameboard_borders(GAMEBOARD, HALF_BOARD_SIZE)
-	_initialize_gameboard_array(gameboard_array, HALF_BOARD_SIZE, func(position: Vector2i):
-		return 0 if HALF_BOARD_SIZE.y * 2.0 - position.y > 3 else 1
-		)
+	_construct_gameboard_borders(GAMEBOARD, 8, HALF_BOARD_SIZE)
+	_initialize_gameboard_array(gameboard_array, HALF_BOARD_SIZE)
 	$Particles.show()
-
+	bag = _generate_bag(TETRONIMOES.size())
+	bag.append_array(_generate_bag(TETRONIMOES.size()))
+	$Next.position.x = GAMEBOARD.tile_set.tile_size.x * (HALF_BOARD_SIZE.x + 1)
+	$Next.position.y = GAMEBOARD.tile_set.tile_size.x * -(HALF_BOARD_SIZE.y + 1)
+	$Hold.position.x = GAMEBOARD.tile_set.tile_size.x * (HALF_BOARD_SIZE.x + 1)
+	$Hold.position.y = GAMEBOARD.tile_set.tile_size.x * -(HALF_BOARD_SIZE.y - 4)
+	hold = -1
 
 func _process(delta: float) -> void:
 	_process_current_piece(delta)
@@ -109,59 +124,96 @@ func _process(delta: float) -> void:
 	if not current_piece == null:
 		array = _combine_boards(array, current_piece_array)
 	GAMEBOARD.clear()
-	_construct_gameboard_borders(GAMEBOARD, HALF_BOARD_SIZE)
+	_construct_gameboard_borders(GAMEBOARD, 8, HALF_BOARD_SIZE)
 	_draw_gameboard_to_tileset(array, GAMEBOARD, TILE_TO_ATLAS, HALF_BOARD_SIZE)
+	_draw_piece(bag[0], Vector2i(HALF_BOARD_SIZE.x + 1, -HALF_BOARD_SIZE.y + 2), GAMEBOARD)
+	if hold > -1:
+		_draw_piece(hold, Vector2i(HALF_BOARD_SIZE.x + 1, -HALF_BOARD_SIZE.y + 7), GAMEBOARD)
 
 
 func _process_current_piece(delta: float):
 	if not current_piece == null:
-		$Label.text = str(_piece_size(current_piece))
+		$Label.text = _print_2d_array(_create_board_from_piece(current_piece, HALF_BOARD_SIZE))
+		$Label.text += "\n" + _print_2d_array(_combine_boards(gameboard_array, current_piece_array))
+		$Label.text += "\n" + str(current_piece.rotation)
+		$Label.text += "\n" + str(_get_cleared_lines(gameboard_array))
+		$Label.text += "\n" + str(bag)
 		fall_time += delta
+		move_time += delta
 		if fall_time > (DROP_SPEED if Input.is_action_pressed("drop") else fall_speed):
 			fall_time = 0.0
 			current_piece.position.y += 1
-			current_piece_array = _create_board_from_piece(current_piece, HALF_BOARD_SIZE)
-			if _piece_is_colliding_array(current_piece_array, gameboard_array):
+			if _piece_is_colliding(current_piece, gameboard_array):
 				current_piece.position.y -= 1
-		if Input.is_action_just_pressed("rotate_left"):
+				fall_lock += 1
+				if fall_lock > FALL_LOCK_MAX:
+					_lock_piece()
+			else:
+				fall_lock = 0
+		if Input.is_action_just_pressed("rotate_left") and not current_piece.type == 3:
 			current_piece.rotate(-1)
 			current_piece = _kick(current_piece, posmod(current_piece.rotation + 1, 4), gameboard_array)
-		if Input.is_action_just_pressed("rotate_right"):
+		
+		if Input.is_action_just_pressed("rotate_right") and not current_piece.type == 3:
 			current_piece.rotate(1)
 			current_piece = _kick(current_piece, posmod(current_piece.rotation - 1, 4), gameboard_array)
+		
+		var move_axis = Input.get_axis("move_left", "move_right")
+		
+		if move_axis and move_time > MOVE_INTERVAL:
+			current_piece.position.x += move_axis
+			if _piece_is_colliding(current_piece, gameboard_array, true):
+				current_piece.position.x -= move_axis
+			else:
+				move_time = 0.0
+		
 		if Input.is_action_just_pressed("hard_drop"):
-			current_piece = null
+			while not _piece_is_colliding(current_piece, gameboard_array):
+				current_piece.position.y += 1
+			
+			current_piece.position.y -= 1
+			_lock_piece()
+		
+		if Input.is_action_just_pressed("hold"):
+			if not hold == -1:
+				bag.insert(0, hold)
+			hold = current_piece.type
+			current_piece = _create_new_piece(bag[0])
+			bag.remove_at(0)
+			fall_time = 0.0
 	else:
-		current_piece = _create_new_piece(randi() % TETRONIMOES.size())
+		current_piece = _create_new_piece(bag[0])
+		bag.remove_at(0)
 		fall_time = 0.0
+	
 	if current_piece == null:
 		_initialize_gameboard_array(current_piece_array, HALF_BOARD_SIZE)
 	else:
 		current_piece_array = _create_board_from_piece(current_piece, HALF_BOARD_SIZE)
 
 
-func _construct_gameboard_borders(tilemap: TileMap, half_size: Vector2i):
+func _construct_gameboard_borders(tilemap: TileMap, layer: int, half_size: Vector2i):
 	# Horizontal borders
 	for x in range(half_size.x + 1):
 		if not x == half_size.x:
-			tilemap.set_cell(0, Vector2i(x, half_size.y), 0, Vector2i(1, 2))
-			tilemap.set_cell(0, Vector2i(x, -half_size.y - 1), 0, Vector2i(1, 0))
-		tilemap.set_cell(0, Vector2i(-x, half_size.y), 0, Vector2i(1, 2))
-		tilemap.set_cell(0, Vector2i(-x, -half_size.y - 1), 0, Vector2i(1, 0))
+			tilemap.set_cell(layer, Vector2i(x, half_size.y), 0, Vector2i(1, 2))
+			tilemap.set_cell(layer, Vector2i(x, -half_size.y - 1), 0, Vector2i(1, 0))
+		tilemap.set_cell(layer, Vector2i(-x, half_size.y), 0, Vector2i(1, 2))
+		tilemap.set_cell(layer, Vector2i(-x, -half_size.y - 1), 0, Vector2i(1, 0))
 		
 	# Vertical borders
 	for y in range(half_size.y + 1):
 		if not y == half_size.y:
-			tilemap.set_cell(0, Vector2i(half_size.x, y), 0, Vector2i(2, 1))
-			tilemap.set_cell(0, Vector2i(-half_size.x - 1, y), 0, Vector2i(0, 1))
-		tilemap.set_cell(0, Vector2i(half_size.x, -y), 0, Vector2i(2, 1))
-		tilemap.set_cell(0, Vector2i(-half_size.x - 1, -y), 0, Vector2i(0, 1))
+			tilemap.set_cell(layer, Vector2i(half_size.x, y), 0, Vector2i(2, 1))
+			tilemap.set_cell(layer, Vector2i(-half_size.x - 1, y), 0, Vector2i(0, 1))
+		tilemap.set_cell(layer, Vector2i(half_size.x, -y), 0, Vector2i(2, 1))
+		tilemap.set_cell(layer, Vector2i(-half_size.x - 1, -y), 0, Vector2i(0, 1))
 	
 	# Fill in corners
-	tilemap.set_cell(0, Vector2i(-(half_size.x + 1), -(half_size.y + 1)), 0, Vector2i(0, 0))
-	tilemap.set_cell(0, Vector2i((half_size.x), -(half_size.y + 1)), 0, Vector2i(2, 0))
-	tilemap.set_cell(0, Vector2i((half_size.x), (half_size.y)), 0, Vector2i(2, 2))
-	tilemap.set_cell(0, Vector2i(-(half_size.x + 1), (half_size.y)), 0, Vector2i(0, 2))
+	tilemap.set_cell(layer, Vector2i(-(half_size.x + 1), -(half_size.y + 1)), 0, Vector2i(0, 0))
+	tilemap.set_cell(layer, Vector2i((half_size.x), -(half_size.y + 1)), 0, Vector2i(2, 0))
+	tilemap.set_cell(layer, Vector2i((half_size.x), (half_size.y)), 0, Vector2i(2, 2))
+	tilemap.set_cell(layer, Vector2i(-(half_size.x + 1), (half_size.y)), 0, Vector2i(0, 2))
 
 
 func _initialize_gameboard_array(array: Array, half_size: Vector2i, data: Callable = func(x):
@@ -175,21 +227,27 @@ func _initialize_gameboard_array(array: Array, half_size: Vector2i, data: Callab
 	return array
 
 
-func _print_2d_array(array: Array):
+func _print_2d_array(array: Array) -> String:
+	var currenter_text = ""
 	for i in range(array.size()):
 		var current_text = ""
 		for j in range(array[i].size()):
 			current_text += str(array[i][j]) + " "
-		print(current_text)
+		currenter_text += current_text + "\n"
+	return currenter_text
 
 
 func _draw_gameboard_to_tileset(array: Array, tilemap: TileMap, tile_dictionary: Dictionary, half_size: Vector2i):
+	var layers: Array = []
+	for i in range(TETRONIMOES.size() + 1):
+		layers.append([])
 	for y in range(array.size()):
 		for x in range(array[y].size()):
-			var data = _2d_index(array, Vector2i(x, y))
-			tilemap.set_cell(0, Vector2i(x, y) - half_size, 0, tile_dictionary[clamp(array[y][x], 0, 1)])
-			if data > 0:
-				tilemap.set_cell(1, Vector2i(x, y) - half_size, 0, Vector2i(_get_neighbors(array, Vector2i(x, y), data, false), 4), data + 1)
+			layers[_2d_index(array, Vector2i(x, y))].append(Vector2i(x, y) - half_size)
+			if _2d_index(array, Vector2i(x, y)) == 0:
+				tilemap.set_cell(9, Vector2i(x, y) - half_size, 0, Vector2i(3, 0))
+	for i in range(layers.size()):
+		tilemap.set_cells_terrain_connect(i, layers[i], 0, 0, true)
 
 
 func _get_neighbors(array: Array, pos: Vector2i, current_data, edge_data: bool) -> int:
@@ -249,7 +307,7 @@ func _create_board_from_piece(piece: Tetronimo, half_size: Vector2i) -> Array:
 	for y in range(piece_array.size()):
 		for x in range(piece_array[y].size()):
 			var full_position: Vector2i = piece.position + Vector2i(x, y)
-			if full_position.x >= 0 and full_position.x <= array[y].size():
+			if full_position.x >= 0 and full_position.x < array[y].size():
 				if full_position.y >= 0 and full_position.y < array.size():
 					array[full_position.y][full_position.x] = piece.type + 1 if piece_array[y][x] > 0 else 0
 	
@@ -276,12 +334,24 @@ func _piece_is_colliding_array(piece_array: Array, board: Array) -> bool:
 	for y in range(board.size()):
 		for x in range(board[y].size()):
 			var pos = Vector2i(x, y)
-			if _2d_index(piece_array, pos) > 0 and _2d_index(board, pos) > 0:
-				return true
+			if _2d_index(board, pos) > 0:
+				if _2d_index(piece_array, pos) > 0:
+					return true
 	return false
 
 
-func _piece_is_colliding(piece: Tetronimo, board: Array) -> bool:
+func _piece_is_colliding(piece: Tetronimo, board: Array, edges_collide: bool = true) -> bool:
+	if edges_collide:
+		var piece_size = _piece_size(piece)
+		var piece_min = piece.position + piece_size.min
+		var piece_max = piece.position + piece_size.max
+		
+		if piece_min.x < 0 or piece_max.x > board[0].size() - 1:
+			return true
+		
+		if piece_max.y > board.size() - 1:
+			return true
+		$Label.text += "\n" + str(piece_min) + ", " + str(piece_max) + ", " + str(board.size() - 1)
 	return _piece_is_colliding_array(_create_board_from_piece(piece, HALF_BOARD_SIZE), board)
 
 
@@ -314,3 +384,65 @@ func _create_new_piece(type: int):
 	piece.position.x = HALF_BOARD_SIZE.x - dimensions.min.x - ceil(dimensions.size.x / 2.0)
 	piece.position.y = -dimensions.max.y - 1
 	return piece
+
+
+func _get_cleared_lines(board: Array) -> PackedInt64Array:
+	var cleared_lines: PackedInt64Array = []
+	for y in range(board.size()):
+		if not board[y].has(0):
+			cleared_lines.append(y)
+	return cleared_lines
+
+
+func _clear_lines(board: Array) -> Array:
+	var new_board: Array = board.duplicate(true)
+	for y in range(new_board.size()):
+#		var y = new_board.size() - oy - 1
+		if not new_board[y].has(0):
+			new_board.remove_at(y)
+			new_board.insert(0, [])
+			for x in range(board[0].size()):
+				new_board[0].append(0)
+	
+	return new_board
+
+
+func _lock_piece():
+	current_piece_array = _create_board_from_piece(current_piece, HALF_BOARD_SIZE)
+	gameboard_array = _combine_boards(gameboard_array, current_piece_array)
+	var cleared_lines = _get_cleared_lines(gameboard_array)
+	if cleared_lines.size() > 0:
+		for x in cleared_lines:
+			var pos = Vector2(0, -HALF_BOARD_SIZE.y * GAMEBOARD.tile_set.tile_size.y + x * GAMEBOARD.tile_set.tile_size.y)
+			var scene = LINE_CLEAR_EFFECT.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+			scene.position = pos
+			add_child(scene)
+	gameboard_array = _clear_lines(gameboard_array)
+	current_piece = null
+	if bag.size() < TETRONIMOES.size():
+		bag.append_array(_generate_bag(TETRONIMOES.size()))
+
+
+func _swap(a: int, b: int, array: Array):
+	var temp = array[a]
+	array[a] = array[b]
+	array[b] = temp
+
+
+func _generate_bag(max: int) -> Array:
+	var array: Array = range(max)
+	for i in range(array.size()):
+		_swap(i, randi_range(i, array.size() - 1), array)
+	return array
+
+
+func _draw_piece(type: int, pos: Vector2i, tilemap: TileMap):
+	var piece_array: Array = TETRONIMOES[type]
+	var dimensions: Dictionary = _piece_size(Tetronimo.new(type, Vector2i.ZERO, 0))
+	var offset: Vector2i = pos - dimensions.min
+	var positions: Array = []
+	for y in range(piece_array.size()):
+		for x in range(piece_array[y].size()):
+			if piece_array[y][x] > 0:
+				positions.append(Vector2i(x, y) + offset)
+	tilemap.set_cells_terrain_connect(type + 1, positions, 0, 0, true)

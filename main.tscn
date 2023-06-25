@@ -1,9 +1,11 @@
-[gd_scene load_steps=11 format=3 uid="uid://4h2303jjkrbm"]
+[gd_scene load_steps=14 format=3 uid="uid://4h2303jjkrbm"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_drkt8"]
 [ext_resource type="Shader" path="res://background.gdshader" id="2_hjubc"]
 [ext_resource type="PackedScene" uid="uid://b2cbp485obcer" path="res://Gameboard/board.tscn" id="2_ivcl0"]
+[ext_resource type="PackedScene" uid="uid://did0qd7k1q4yx" path="res://explosion/explosion.tscn" id="2_me6gn"]
 [ext_resource type="PackedScene" uid="uid://b8kbt8veoa7vv" path="res://Background/background.tscn" id="4_2fttc"]
+[ext_resource type="FontFile" uid="uid://cuh8daqbadoc7" path="res://fonts/Quicksand-Bold.ttf" id="6_jhand"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_j3j32"]
 shader = ExtResource("2_hjubc")
@@ -28,8 +30,9 @@ glow_levels/7 = 0.25
 glow_normalized = true
 glow_intensity = 0.5
 glow_strength = 1.62
+glow_bloom = 0.1
 glow_blend_mode = 1
-glow_hdr_threshold = 0.4
+glow_hdr_threshold = 0.3
 glow_hdr_scale = 1.0
 glow_hdr_luminance_cap = 256.0
 glow_map_strength = 1.0
@@ -42,9 +45,17 @@ glow_map_strength = 1.0
 font = SubResource("SystemFont_vpxja")
 font_size = 100
 
+[sub_resource type="LabelSettings" id="LabelSettings_calj3"]
+line_spacing = 0.0
+font = ExtResource("6_jhand")
+font_size = 500
+font_color = Color(0, 0, 0, 1)
+outline_size = 175
+
 [node name="Main" type="Node2D" node_paths=PackedStringArray("GAMEBOARD")]
 script = ExtResource("1_drkt8")
 GAMEBOARD = NodePath("Board")
+LINE_CLEAR_EFFECT = ExtResource("2_me6gn")
 
 [node name="Background" type="ColorRect" parent="."]
 material = SubResource("ShaderMaterial_j3j32")
@@ -64,13 +75,13 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -960.0
-offset_top = -540.0
+offset_top = -960.0
 offset_right = 960.0
-offset_bottom = 540.0
+offset_bottom = 960.0
 grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(10, 10)
-pivot_offset = Vector2(960, 540)
+pivot_offset = Vector2(960, 960)
 size_flags_horizontal = 3
 size_flags_vertical = 3
 texture = SubResource("ViewportTexture_vuwlf")
@@ -85,15 +96,40 @@ material = SubResource("ShaderMaterial_rgpq2")
 zoom = Vector2(0.1, 0.1)
 
 [node name="BackgroundParticles" parent="." instance=ExtResource("4_2fttc")]
+size = Vector2i(1920, 1920)
 
 [node name="Label" type="Label" parent="."]
+visible = false
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = 1709.0
-offset_top = -1541.0
-offset_right = 3622.0
-offset_bottom = -176.0
+offset_left = -1760.5
+offset_right = 1760.5
+offset_bottom = 3445.0
 grow_horizontal = 2
 text = "text"
 label_settings = SubResource("LabelSettings_wixnq")
+
+[node name="Next" type="Label" parent="."]
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -362.0
+offset_right = 1547.0
+offset_bottom = 362.0
+grow_vertical = 2
+text = "n e x t"
+label_settings = SubResource("LabelSettings_calj3")
+horizontal_alignment = 1
+
+[node name="Hold" type="Label" parent="."]
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -187.0
+offset_right = 573.0
+offset_bottom = 187.0
+grow_vertical = 2
+text = "h o l d"
+label_settings = SubResource("LabelSettings_calj3")
+horizontal_alignment = 1
