@@ -1,55 +1,53 @@
 extends Node2D
 
-signal lines_cleared(lines: PackedInt64Array)
-
 @export var GAMEBOARD: TileMap
 @export var HALF_BOARD_SIZE: Vector2i = Vector2i(5, 10)
 @export var TILE_TO_ATLAS: Dictionary = { 0: Vector2i(3, 0), 1: Vector2i(4, 0)}
 @export var DROP_SPEED: float = 0.1
 @export var FALL_LOCK_MAX: int = 1
-@export var MOVE_INTERVAL: float = 0.1
+@export var MOVE_INTERVAL: float = 0.05
 @export var LINE_CLEAR_EFFECT: PackedScene
 
-const Tetronimo = preload("res://tetronimo.gd")
+const Tetromino = preload("res://tetromino.gd")
 
-const TETRONIMOES: Dictionary = {
-		# I tetronimo
+const TETROMINOES: Dictionary = {
+		# I tetromino
 		0: [[0, 0, 0, 0, 0],
 			[0, 0, 0, 0, 0],
 			[0, 1, 1, 1, 1],
 			[0, 0, 0, 0, 0],
 			[0, 0, 0, 0, 0]],
-		# J tetronimo
+		# J tetromino
 		1: [[0, 0, 0, 0, 0],
 			[0, 1, 0, 0, 0],
 			[0, 1, 1, 1, 0],
 			[0, 0, 0, 0, 0],
 			[0, 0, 0, 0, 0]],
-		# L tetronimo
+		# L tetromino
 		2: [[0, 0, 0, 0, 0],
 			[0, 0, 0, 1, 0],
 			[0, 1, 1, 1, 0],
 			[0, 0, 0, 0, 0],
 			[0, 0, 0, 0, 0]],
-		# O tetronimo
+		# O tetromino
 		3: [[0, 0, 0, 0, 0],
 			[0, 0, 1, 1, 0],
 			[0, 0, 1, 1, 0],
 			[0, 0, 0, 0, 0],
 			[0, 0, 0, 0, 0]],
-		# S tetronimo
+		# S tetromino
 		4: [[0, 0, 0, 0, 0],
 			[0, 0, 1, 1, 0],
 			[0, 1, 1, 0, 0],
 			[0, 0, 0, 0, 0],
 			[0, 0, 0, 0, 0]],
-		# T tetronimo
+		# T tetromino
 		5: [[0, 0, 0, 0, 0],
 			[0, 0, 1, 0, 0],
 			[0, 1, 1, 1, 0],
 			[0, 0, 0, 0, 0],
 			[0, 0, 0, 0, 0]],
-		# Z tetronimo
+		# Z tetromino
 		6: [[0, 0, 0, 0, 0],
 			[0, 1, 1, 0, 0],
 			[0, 0, 1, 1, 0],
@@ -91,32 +89,34 @@ const KICK_OFFSETS: Dictionary = {
 var gameboard_array: Array = []
 var gameboard_size: Vector2i
 
+var lines_cleared: int
+
 var bag: Array
 var hold: int
+var not_held: bool
 
 var fall_time: float
 var fall_speed: float
 var fall_lock: int
 
-var current_piece: Tetronimo
+var current_piece: Tetromino
 var current_piece_array: Array
 
 var move_time: float
 
+var label_offsets: Dictionary = {}
+
 func _ready() -> void:
-	fall_speed = 0.5
-	gameboard_size = HALF_BOARD_SIZE * 2
-	GAMEBOARD.clear()
-	_construct_gameboard_borders(GAMEBOARD, 8, HALF_BOARD_SIZE)
-	_initialize_gameboard_array(gameboard_array, HALF_BOARD_SIZE)
 	$Particles.show()
-	bag = _generate_bag(TETRONIMOES.size())
-	bag.append_array(_generate_bag(TETRONIMOES.size()))
-	$Next.position.x = GAMEBOARD.tile_set.tile_size.x * (HALF_BOARD_SIZE.x + 1)
-	$Next.position.y = GAMEBOARD.tile_set.tile_size.x * -(HALF_BOARD_SIZE.y + 1)
-	$Hold.position.x = GAMEBOARD.tile_set.tile_size.x * (HALF_BOARD_SIZE.x + 1)
-	$Hold.position.y = GAMEBOARD.tile_set.tile_size.x * -(HALF_BOARD_SIZE.y - 4)
-	hold = -1
+	
+	fall_speed = 0.3
+	gameboard_size = HALF_BOARD_SIZE * 2
+	
+	_reset_game()
+	
+	_position_text($Next, Vector2(1, -1), Vector2(1, -1))
+	_position_text($Hold, Vector2(1, -1), Vector2(1, -5))
+	_position_text($LinesCleared, Vector2(-1, -1), Vector2(1, -1))
 
 func _process(delta: float) -> void:
 	_process_current_piece(delta)
@@ -129,15 +129,13 @@ func _process(delta: float) -> void:
 	_draw_piece(bag[0], Vector2i(HALF_BOARD_SIZE.x + 1, -HALF_BOARD_SIZE.y + 2), GAMEBOARD)
 	if hold > -1:
 		_draw_piece(hold, Vector2i(HALF_BOARD_SIZE.x + 1, -HALF_BOARD_SIZE.y + 7), GAMEBOARD)
+	
+	$LinesCleared/LinesClearedSub.text = str(lines_cleared)
+
 
 
 func _process_current_piece(delta: float):
 	if not current_piece == null:
-		$Label.text = _print_2d_array(_create_board_from_piece(current_piece, HALF_BOARD_SIZE))
-		$Label.text += "\n" + _print_2d_array(_combine_boards(gameboard_array, current_piece_array))
-		$Label.text += "\n" + str(current_piece.rotation)
-		$Label.text += "\n" + str(_get_cleared_lines(gameboard_array))
-		$Label.text += "\n" + str(bag)
 		fall_time += delta
 		move_time += delta
 		if fall_time > (DROP_SPEED if Input.is_action_pressed("drop") else fall_speed):
@@ -150,41 +148,51 @@ func _process_current_piece(delta: float):
 					_lock_piece()
 			else:
 				fall_lock = 0
-		if Input.is_action_just_pressed("rotate_left") and not current_piece.type == 3:
-			current_piece.rotate(-1)
-			current_piece = _kick(current_piece, posmod(current_piece.rotation + 1, 4), gameboard_array)
-		
-		if Input.is_action_just_pressed("rotate_right") and not current_piece.type == 3:
-			current_piece.rotate(1)
-			current_piece = _kick(current_piece, posmod(current_piece.rotation - 1, 4), gameboard_array)
-		
-		var move_axis = Input.get_axis("move_left", "move_right")
-		
-		if move_axis and move_time > MOVE_INTERVAL:
-			current_piece.position.x += move_axis
-			if _piece_is_colliding(current_piece, gameboard_array, true):
-				current_piece.position.x -= move_axis
-			else:
-				move_time = 0.0
-		
-		if Input.is_action_just_pressed("hard_drop"):
-			while not _piece_is_colliding(current_piece, gameboard_array):
-				current_piece.position.y += 1
+		if not current_piece == null:
+			if Input.is_action_just_pressed("rotate_left") and not current_piece.type == 3:
+				current_piece.rotate(-1)
+				var candidate = _kick(current_piece, posmod(current_piece.rotation + 1, 4), gameboard_array)
+				if candidate == null:
+					current_piece.rotate(1)
+				else:
+					current_piece = candidate
 			
-			current_piece.position.y -= 1
-			_lock_piece()
-		
-		if Input.is_action_just_pressed("hold"):
-			if not hold == -1:
-				bag.insert(0, hold)
-			hold = current_piece.type
-			current_piece = _create_new_piece(bag[0])
-			bag.remove_at(0)
-			fall_time = 0.0
+			if Input.is_action_just_pressed("rotate_right") and not current_piece.type == 3:
+				current_piece.rotate(1)
+				var candidate = _kick(current_piece, posmod(current_piece.rotation - 1, 4), gameboard_array)
+				if candidate == null:
+					current_piece.rotate(-1)
+				else:
+					current_piece = candidate
+			
+			var move_axis = Input.get_axis("move_left", "move_right")
+			
+			if move_axis and move_time > MOVE_INTERVAL:
+				current_piece.position.x += move_axis
+				if _piece_is_colliding(current_piece, gameboard_array, true):
+					current_piece.position.x -= move_axis
+				else:
+					move_time = 0.0
+			
+			if Input.is_action_just_pressed("hard_drop"):
+				while not _piece_is_colliding(current_piece, gameboard_array):
+					current_piece.position.y += 1
+				
+				current_piece.position.y -= 1
+				_lock_piece()
+			
+			if Input.is_action_just_pressed("hold") and not_held:
+				if not hold == -1:
+					bag.insert(0, hold)
+				hold = current_piece.type
+				current_piece = _create_new_piece(bag[0])
+				bag.remove_at(0)
+				fall_time = fall_speed
+				not_held = false
 	else:
 		current_piece = _create_new_piece(bag[0])
 		bag.remove_at(0)
-		fall_time = 0.0
+		fall_time = fall_speed
 	
 	if current_piece == null:
 		_initialize_gameboard_array(current_piece_array, HALF_BOARD_SIZE)
@@ -239,7 +247,7 @@ func _print_2d_array(array: Array) -> String:
 
 func _draw_gameboard_to_tileset(array: Array, tilemap: TileMap, tile_dictionary: Dictionary, half_size: Vector2i):
 	var layers: Array = []
-	for i in range(TETRONIMOES.size() + 1):
+	for i in range(TETROMINOES.size() + 1):
 		layers.append([])
 	for y in range(array.size()):
 		for x in range(array[y].size()):
@@ -298,11 +306,11 @@ func _rotate_piece(array: Array, direction: int) -> Array:
 	return new_array
 
 
-func _create_board_from_piece(piece: Tetronimo, half_size: Vector2i) -> Array:
+func _create_board_from_piece(piece: Tetromino, half_size: Vector2i) -> Array:
 	var array: Array
 	_initialize_gameboard_array(array, half_size)
 	
-	var piece_array: Array = _rotate_piece(TETRONIMOES[piece.type], piece.rotation)
+	var piece_array: Array = _rotate_piece(TETROMINOES[piece.type], piece.rotation)
 	
 	for y in range(piece_array.size()):
 		for x in range(piece_array[y].size()):
@@ -314,8 +322,8 @@ func _create_board_from_piece(piece: Tetronimo, half_size: Vector2i) -> Array:
 	return array
 
 
-func _piece_size(piece: Tetronimo) -> Dictionary:
-	var array: Array = _rotate_piece(TETRONIMOES[piece.type], piece.rotation)
+func _piece_size(piece: Tetromino) -> Dictionary:
+	var array: Array = _rotate_piece(TETROMINOES[piece.type], piece.rotation)
 	var min: Vector2i = Vector2i(array[0].size(), array.size())
 	var max: Vector2i = Vector2i.ZERO
 	for y in range(array.size()):
@@ -340,7 +348,7 @@ func _piece_is_colliding_array(piece_array: Array, board: Array) -> bool:
 	return false
 
 
-func _piece_is_colliding(piece: Tetronimo, board: Array, edges_collide: bool = true) -> bool:
+func _piece_is_colliding(piece: Tetromino, board: Array, edges_collide: bool = true) -> bool:
 	if edges_collide:
 		var piece_size = _piece_size(piece)
 		var piece_min = piece.position + piece_size.min
@@ -351,7 +359,6 @@ func _piece_is_colliding(piece: Tetronimo, board: Array, edges_collide: bool = t
 		
 		if piece_max.y > board.size() - 1:
 			return true
-		$Label.text += "\n" + str(piece_min) + ", " + str(piece_max) + ", " + str(board.size() - 1)
 	return _piece_is_colliding_array(_create_board_from_piece(piece, HALF_BOARD_SIZE), board)
 
 
@@ -367,22 +374,23 @@ func _combine_boards(array_0: Array, array_1: Array):
 	return res
 
 
-func _kick(piece: Tetronimo, previous_rotation: int, board: Array) -> Tetronimo:
+func _kick(piece: Tetromino, previous_rotation: int, board: Array) -> Tetromino:
 	var previous_kick = KICK_OFFSETS[piece.type][previous_rotation]
 	var current_kick = KICK_OFFSETS[piece.type][piece.rotation]
 	for x in range(5):
 		var kick_offset: Vector2i = previous_kick[x] - current_kick[x]
-		var candidate: Tetronimo = Tetronimo.new(piece.type, piece.position + kick_offset, piece.rotation)
+		var candidate: Tetromino = Tetromino.new(piece.type, piece.position + kick_offset, piece.rotation)
 		if not _piece_is_colliding(candidate, board):
 			return candidate
-	return piece
+	return null
 
 
 func _create_new_piece(type: int):
-	var piece: Tetronimo = Tetronimo.new(type, Vector2i.ZERO, 0)
+	var piece: Tetromino = Tetromino.new(type, Vector2i.ZERO, 0)
 	var dimensions = _piece_size(piece)
 	piece.position.x = HALF_BOARD_SIZE.x - dimensions.min.x - ceil(dimensions.size.x / 2.0)
 	piece.position.y = -dimensions.max.y - 1
+	not_held = true
 	return piece
 
 
@@ -417,10 +425,11 @@ func _lock_piece():
 			var scene = LINE_CLEAR_EFFECT.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
 			scene.position = pos
 			add_child(scene)
+		lines_cleared += cleared_lines.size()
 	gameboard_array = _clear_lines(gameboard_array)
 	current_piece = null
-	if bag.size() < TETRONIMOES.size():
-		bag.append_array(_generate_bag(TETRONIMOES.size()))
+	if bag.size() < TETROMINOES.size():
+		bag.append_array(_generate_bag(TETROMINOES.size()))
 
 
 func _swap(a: int, b: int, array: Array):
@@ -437,8 +446,8 @@ func _generate_bag(max: int) -> Array:
 
 
 func _draw_piece(type: int, pos: Vector2i, tilemap: TileMap):
-	var piece_array: Array = TETRONIMOES[type]
-	var dimensions: Dictionary = _piece_size(Tetronimo.new(type, Vector2i.ZERO, 0))
+	var piece_array: Array = TETROMINOES[type]
+	var dimensions: Dictionary = _piece_size(Tetromino.new(type, Vector2i.ZERO, 0))
 	var offset: Vector2i = pos - dimensions.min
 	var positions: Array = []
 	for y in range(piece_array.size()):
@@ -446,3 +455,17 @@ func _draw_piece(type: int, pos: Vector2i, tilemap: TileMap):
 			if piece_array[y][x] > 0:
 				positions.append(Vector2i(x, y) + offset)
 	tilemap.set_cells_terrain_connect(type + 1, positions, 0, 0, true)
+
+
+func _position_text(node: Label, alignment: Vector2, offset: Vector2):
+	if not label_offsets.has(node):
+		label_offsets.merge({ node: node.position })
+	node.position = label_offsets[node] + Vector2(GAMEBOARD.tile_set.tile_size) * (Vector2(HALF_BOARD_SIZE.x, HALF_BOARD_SIZE.y) + offset) * alignment
+
+
+func _reset_game():
+	_initialize_gameboard_array(gameboard_array, HALF_BOARD_SIZE)
+	bag = _generate_bag(TETROMINOES.size())
+	bag.append_array(_generate_bag(TETROMINOES.size()))
+	hold = -1
+	lines_cleared = 0

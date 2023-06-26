@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://b2cbp485obcer" path="res://Gameboard/board.tscn" id="2_ivcl0"]
 [ext_resource type="PackedScene" uid="uid://did0qd7k1q4yx" path="res://explosion/explosion.tscn" id="2_me6gn"]
 [ext_resource type="PackedScene" uid="uid://b8kbt8veoa7vv" path="res://Background/background.tscn" id="4_2fttc"]
-[ext_resource type="FontFile" uid="uid://cuh8daqbadoc7" path="res://fonts/Quicksand-Bold.ttf" id="6_jhand"]
+[ext_resource type="FontFile" uid="uid://byn5c2lqsino5" path="res://fonts/Dosis-Regular.ttf" id="6_hmrn0"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_j3j32"]
 shader = ExtResource("2_hjubc")
@@ -47,10 +47,9 @@ font_size = 100
 
 [sub_resource type="LabelSettings" id="LabelSettings_calj3"]
 line_spacing = 0.0
-font = ExtResource("6_jhand")
+font = ExtResource("6_hmrn0")
 font_size = 500
-font_color = Color(0, 0, 0, 1)
-outline_size = 175
+outline_size = 30
 
 [node name="Main" type="Node2D" node_paths=PackedStringArray("GAMEBOARD")]
 script = ExtResource("1_drkt8")
@@ -103,9 +102,10 @@ visible = false
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -1760.5
-offset_right = 1760.5
-offset_bottom = 3445.0
+offset_left = 1476.0
+offset_top = -2553.0
+offset_right = 5968.0
+offset_bottom = 4272.0
 grow_horizontal = 2
 text = "text"
 label_settings = SubResource("LabelSettings_wixnq")
@@ -118,18 +118,49 @@ offset_top = -362.0
 offset_right = 1547.0
 offset_bottom = 362.0
 grow_vertical = 2
-text = "n e x t"
+text = "next"
 label_settings = SubResource("LabelSettings_calj3")
-horizontal_alignment = 1
 
 [node name="Hold" type="Label" parent="."]
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
-offset_top = -187.0
-offset_right = 573.0
-offset_bottom = 187.0
+offset_top = -316.5
+offset_right = 829.0
+offset_bottom = 316.5
 grow_vertical = 2
-text = "h o l d"
+text = "hold"
 label_settings = SubResource("LabelSettings_calj3")
 horizontal_alignment = 1
+
+[node name="LinesCleared" type="Label" parent="."]
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -2353.0
+offset_top = -316.5
+offset_bottom = 316.5
+grow_horizontal = 0
+grow_vertical = 2
+text = "lines"
+label_settings = SubResource("LabelSettings_calj3")
+horizontal_alignment = 2
+
+[node name="LinesClearedSub" type="Label" parent="LinesCleared"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -2638.0
+offset_top = 183.5
+offset_bottom = 816.5
+grow_horizontal = 0
+grow_vertical = 2
+text = "100
+"
+label_settings = SubResource("LabelSettings_calj3")
+horizontal_alignment = 2

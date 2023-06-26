@@ -1,4 +1,4 @@
-class_name Tetronimo extends Object
+class_name Tetromino extends Object
 
 var type: int
 var position: Vector2i

@@ -1355,7 +1355,7 @@ terrain_set_0/terrain_0/color = Color(1, 0, 1, 1)
 sources/0 = SubResource("TileSetAtlasSource_s7lwk")
 
 [node name="Board" type="TileMap"]
-texture_filter = 1
+texture_filter = 2
 tile_set = SubResource("TileSet_66to8")
 format = 2
 layer_0/name = "none"
