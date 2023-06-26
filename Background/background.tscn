@@ -30,8 +30,10 @@ uniform float brightness;
 
 
 void vertex() {
-	POINT_SIZE= point_size / distance(NODE_POSITION_WORLD, CAMERA_POSITION_WORLD)*40.0;
+	float depth = distance(NODE_POSITION_WORLD, CAMERA_POSITION_WORLD);
+	POINT_SIZE= point_size / depth * 40.0;
 	UV=UV*uv1_scale.xy+uv1_offset.xy;
+	UV.x = depth;
 }
 
 
@@ -59,6 +61,7 @@ void fragment() {
 	NORMAL_MAP = mix(NORMAL_MAP,detail_norm,detail_mask_tex.r);
 	ALBEDO.rgb = mix(ALBEDO.rgb,detail,detail_mask_tex.r);
 	ALBEDO.rgb *= brightness;
+	ALPHA *= smoothstep(0.0, 20.0, UV.x);
 }
 "
 

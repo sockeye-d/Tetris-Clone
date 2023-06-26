@@ -54,6 +54,8 @@ outline_size = 30
 [node name="Main" type="Node2D" node_paths=PackedStringArray("GAMEBOARD")]
 script = ExtResource("1_drkt8")
 GAMEBOARD = NodePath("Board")
+DROP_SPEED = 0.05
+MOVE_INTERVAL = 0.1
 LINE_CLEAR_EFFECT = ExtResource("2_me6gn")
 
 [node name="Background" type="ColorRect" parent="."]
