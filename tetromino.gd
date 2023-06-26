@@ -11,3 +11,6 @@ func _init(_type: int, _pos: Vector2i, _rot: int):
 	type = _type
 	position = _pos
 	rotation = _rot
+
+func duplicate() -> Tetromino:
+	return Tetromino.new(type, position, rotation)
