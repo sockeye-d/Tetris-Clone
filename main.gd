@@ -1,9 +1,11 @@
 extends Node2D
 
+signal death
+
 @export var GAMEBOARD: TileMap
 @export var HALF_BOARD_SIZE: Vector2i = Vector2i(5, 10)
 @export var TILE_TO_ATLAS: Dictionary = { 0: Vector2i(3, 0), 1: Vector2i(4, 0)}
-@export var DROP_SPEED: float = 0.1
+@export var BASE_DROP_SPEED: float = 0.1
 @export var FALL_LOCK_MAX: int = 1
 @export var MOVE_INTERVAL: float = 0.05
 @export var LINE_CLEAR_EFFECT: PackedScene
@@ -87,10 +89,17 @@ const KICK_OFFSETS: Dictionary = {
 		6: JLSTZ_KICK_OFFSETS,
 }
 
+var old_hash: int
+var old_gameboard: Array
+var old_ghost: Array
+var old_bag_piece: int
+var old_hold: int
+
 var gameboard_array: Array = []
 var gameboard_size: Vector2i
 
 var lines_cleared: int
+var pieces_placed: int
 
 var bag: Array
 var hold: int
@@ -110,36 +119,41 @@ var label_offsets: Dictionary = {}
 func _ready() -> void:
 	$Particles.show()
 	
-	fall_speed = 0.3
+	fall_speed = _get_speed()
 	gameboard_size = HALF_BOARD_SIZE * 2
 	
 	_reset_game()
 	
+	_position_text($LinesCleared, Vector2(-1, -1), Vector2(1, -1))
 	_position_text($Next, Vector2(1, -1), Vector2(1, -1))
 	_position_text($Hold, Vector2(1, -1), Vector2(1, -5))
-	_position_text($LinesCleared, Vector2(-1, -1), Vector2(1, -1))
+	_construct_gameboard_borders(GAMEBOARD, 10, HALF_BOARD_SIZE)
 
 func _process(delta: float) -> void:
 	_process_current_piece(delta)
 	var array = gameboard_array
 	if not current_piece == null:
 		array = _combine_boards(array, current_piece_array)
-	GAMEBOARD.clear()
-	_construct_gameboard_borders(GAMEBOARD, 10, HALF_BOARD_SIZE)
-	_draw_gameboard_to_tileset(array, GAMEBOARD, TILE_TO_ATLAS, HALF_BOARD_SIZE, SHOW_GHOST_BLOCK, current_piece, gameboard_array)
-	_draw_piece(bag[0], Vector2i(HALF_BOARD_SIZE.x + 1, -HALF_BOARD_SIZE.y + 2), GAMEBOARD)
-	if hold > -1:
-		_draw_piece(hold, Vector2i(HALF_BOARD_SIZE.x + 1, -HALF_BOARD_SIZE.y + 7), GAMEBOARD)
+	if not (str(array) + str(hold)).hash() == old_hash:
+		_draw_gameboard_to_tileset(array, GAMEBOARD, TILE_TO_ATLAS, HALF_BOARD_SIZE, SHOW_GHOST_BLOCK, current_piece, gameboard_array)
+		_draw_piece(bag[0], old_bag_piece, Vector2i(HALF_BOARD_SIZE.x + 1, -HALF_BOARD_SIZE.y + 2), GAMEBOARD)
+		
+		if hold > -1:
+			_draw_piece(hold, old_hold, Vector2i(HALF_BOARD_SIZE.x + 1, -HALF_BOARD_SIZE.y + 7), GAMEBOARD)
+		
+		old_hash = (str(array) + str(hold)).hash()
+		old_bag_piece = bag[0]
+		old_hold = hold
 	
-	$LinesCleared/LinesClearedSub.text = str(lines_cleared)
-
+	$LinesCleared.text = "lines" + "\n" + str(lines_cleared)
 
 
 func _process_current_piece(delta: float):
 	if not current_piece == null:
 		fall_time += delta
 		move_time += delta
-		if fall_time > (DROP_SPEED if Input.is_action_pressed("drop") else fall_speed):
+		var drop_speed = min(fall_speed / 2, BASE_DROP_SPEED)
+		if fall_time > (drop_speed if Input.is_action_pressed("drop") else fall_speed):
 			fall_time = 0.0
 			current_piece.position.y += 1
 			if _piece_is_colliding(current_piece, gameboard_array):
@@ -183,14 +197,10 @@ func _process_current_piece(delta: float):
 				if not hold == -1:
 					bag.insert(0, hold)
 				hold = current_piece.type
-				current_piece = _create_new_piece(bag[0])
-				bag.remove_at(0)
-				fall_time = fall_speed
+				_new_game_piece()
 				not_held = false
 	else:
-		current_piece = _create_new_piece(bag[0])
-		bag.remove_at(0)
-		fall_time = fall_speed
+		_new_game_piece()
 	
 	if current_piece == null:
 		_initialize_gameboard_array(current_piece_array, HALF_BOARD_SIZE)
@@ -243,30 +253,35 @@ func _print_2d_array(array: Array) -> String:
 	return currenter_text
 
 
-func _draw_gameboard_to_tileset(array: Array, tilemap: TileMap, tile_dictionary: Dictionary, half_size: Vector2i, draw_ghost: bool, ghost_piece: Tetromino, array_no_piece: Array):
+func _draw_gameboard_to_tileset(e_array: Array, tilemap: TileMap, tile_dictionary: Dictionary, half_size: Vector2i, draw_ghost: bool, ghost_piece: Tetromino, array_no_piece: Array):
+	var array: Array  = e_array.duplicate(true)
 	var ghost_array = null
 	if draw_ghost and not ghost_piece == null:
-		ghost_array = _create_board_from_piece(_hard_drop(ghost_piece, array_no_piece), half_size)
+		array = _combine_boards(array, _create_board_from_piece(_hard_drop(ghost_piece, array_no_piece), half_size, 7))
 	var layers: Array = []
-	for i in range(TETROMINOES.size() + 1):
+	var delete: Array = []
+	for i in range(TETROMINOES.size() + 2):
 		layers.append([])
+		delete.append([])
 	for y in range(array.size()):
 		for x in range(array[y].size()):
-			layers[_2d_index(array, Vector2i(x, y))].append(Vector2i(x, y) - half_size)
+			var old_board_value = _2d_index(old_gameboard, Vector2i(x, y))
+			var new_board_value = _2d_index(array, Vector2i(x, y))
+			if not old_board_value == new_board_value:
+				layers[_2d_index(array, Vector2i(x, y))].append(Vector2i(x, y) - half_size)
+#				if new_board_value == 0 or old_board_value == 8:
+				delete[old_board_value].append(Vector2i(x, y) - half_size)
 			if _2d_index(array, Vector2i(x, y)) == 0:
-				if draw_ghost and not ghost_array == null:
-					if _2d_index(ghost_array, Vector2i(x, y)) == 0:
-						tilemap.set_cell(9, Vector2i(x, y) - half_size, 0, Vector2i(3, 0))
-				else:
-					tilemap.set_cell(9, Vector2i(x, y) - half_size, 0, Vector2i(3, 0))
-	if not ghost_array == null:
-		layers.append([])
-		for y in range(ghost_array.size()):
-			for x in range(ghost_array[y].size()):
-				if _2d_index(ghost_array, Vector2i(x, y)) > 0 and _2d_index(array, Vector2i(x, y)) == 0:
-					layers[-1].append(Vector2i(x, y) - half_size)
+				tilemap.set_cell(9, Vector2i(x, y) - half_size, 0, Vector2i(3, 0))
+			else:
+				tilemap.set_cell(9, Vector2i(x, y) - half_size)
+	$Label.text = _print_2d_array(array)
+	for i in range(delete.size()):
+		tilemap.set_cells_terrain_connect(i, delete[i], 0, -1, false)
 	for i in range(layers.size()):
 		tilemap.set_cells_terrain_connect(i, layers[i], 0, 0, true)
+	old_gameboard = array.duplicate(true)
+	return
 
 
 func _get_neighbors(array: Array, pos: Vector2i, current_data, edge_data: bool) -> int:
@@ -317,7 +332,10 @@ func _rotate_piece(array: Array, direction: int) -> Array:
 	return new_array
 
 
-func _create_board_from_piece(piece: Tetromino, half_size: Vector2i) -> Array:
+func _create_board_from_piece(piece: Tetromino, half_size: Vector2i, e_data: int = -1) -> Array:
+	var data = e_data
+	if e_data == -1:
+		data = piece.type
 	var array: Array
 	_initialize_gameboard_array(array, half_size)
 	
@@ -328,7 +346,7 @@ func _create_board_from_piece(piece: Tetromino, half_size: Vector2i) -> Array:
 			var full_position: Vector2i = piece.position + Vector2i(x, y)
 			if full_position.x >= 0 and full_position.x < array[y].size():
 				if full_position.y >= 0 and full_position.y < array.size():
-					array[full_position.y][full_position.x] = piece.type + 1 if piece_array[y][x] > 0 else 0
+					array[full_position.y][full_position.x] = data + 1 if piece_array[y][x] > 0 else 0
 	
 	return array
 
@@ -400,7 +418,7 @@ func _create_new_piece(type: int):
 	var piece: Tetromino = Tetromino.new(type, Vector2i.ZERO, 0)
 	var dimensions = _piece_size(piece)
 	piece.position.x = HALF_BOARD_SIZE.x - dimensions.min.x - ceil(dimensions.size.x / 2.0)
-	piece.position.y = -dimensions.max.y - 1
+	piece.position.y = -dimensions.max.y
 	not_held = true
 	return piece
 
@@ -423,7 +441,7 @@ func _clear_lines(board: Array) -> Array:
 			for x in range(board[0].size()):
 				new_board[0].append(0)
 	
-	return new_board
+	return new_board.duplicate(true)
 
 
 func _lock_piece():
@@ -441,6 +459,10 @@ func _lock_piece():
 	current_piece = null
 	if bag.size() < TETROMINOES.size():
 		bag.append_array(_generate_bag(TETROMINOES.size()))
+	
+	pieces_placed += 1
+	fall_speed = _get_speed(floor(float(lines_cleared) / 10))
+	$Background.material.set_shader_parameter("modulate", 1.0 - 1.0 / (0.2 * lines_cleared + 1.0))
 
 
 func _swap(a: int, b: int, array: Array):
@@ -456,11 +478,17 @@ func _generate_bag(max: int) -> Array:
 	return array
 
 
-func _draw_piece(type: int, pos: Vector2i, tilemap: TileMap):
+func _draw_piece(type: int, old_type: int, pos: Vector2i, tilemap: TileMap):
 	var piece_array: Array = TETROMINOES[type]
 	var dimensions: Dictionary = _piece_size(Tetromino.new(type, Vector2i.ZERO, 0))
 	var offset: Vector2i = pos - dimensions.min
 	var positions: Array = []
+	if not old_type == -1:
+		var old_offset: Vector2i = pos - dimensions.min
+		var old_dimensions: Dictionary = _piece_size(Tetromino.new(old_type, Vector2i.ZERO, 0))
+		for y in range(piece_array.size()):
+			for x in range(piece_array[y].size()):
+					tilemap.set_cell(old_type + 1, Vector2i(x, y) + old_offset)
 	for y in range(piece_array.size()):
 		for x in range(piece_array[y].size()):
 			if piece_array[y][x] > 0:
@@ -480,6 +508,7 @@ func _reset_game():
 	bag.append_array(_generate_bag(TETROMINOES.size()))
 	hold = -1
 	lines_cleared = 0
+	old_gameboard = gameboard_array
 
 
 func _hard_drop(o_piece: Tetromino, array: Array) -> Tetromino:
@@ -489,3 +518,18 @@ func _hard_drop(o_piece: Tetromino, array: Array) -> Tetromino:
 	
 	piece.position.y -= 1
 	return piece
+
+
+func _new_game_piece():
+	current_piece = _create_new_piece(bag[0])
+	if _piece_is_colliding(current_piece, gameboard_array, false):
+		death.emit()
+	bag.remove_at(0)
+	fall_time = 0.0
+
+
+func _get_speed(in_level: float = -1.0) -> float:
+	var level = in_level - 1
+	if in_level == -1.0:
+		level = floor(float(lines_cleared) / 10) - 1
+	return (0.8 - level * 0.007) ** level

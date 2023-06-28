@@ -11,14 +11,14 @@ config_version=5
 [application]
 
 config/name="Tetris Clone"
-run/main_scene="res://main.tscn"
+run/main_scene="res://main_game.tscn"
 config/features=PackedStringArray("4.0", "Forward Plus")
-config/icon="res://art/misc/icon.png"
+config/icon="res://art/misc/icon192x192.png"
 
 [display]
 
 window/stretch/mode="canvas_items"
-window/handheld/orientation=1
+window/dpi/allow_hidpi=false
 
 [input]
 
@@ -60,5 +60,7 @@ hold={
 
 [rendering]
 
+renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true
 textures/lossless_compression/force_png=true
 environment/defaults/default_clear_color=Color(0.345098, 0.345098, 0.345098, 1)

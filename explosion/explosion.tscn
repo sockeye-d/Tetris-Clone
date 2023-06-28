@@ -49,7 +49,7 @@ turbulence_influence_over_life = SubResource("CurveTexture_uokqs")
 
 [node name="Explosion" type="GPUParticles2D"]
 emitting = false
-amount = 1000
+amount = 500
 process_material = SubResource("ParticleProcessMaterial_syqjf")
 texture = ExtResource("1_7a1jq")
 one_shot = true
