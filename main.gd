@@ -118,6 +118,11 @@ var label_offsets: Dictionary = {}
 
 func _ready() -> void:
 	$Particles.show()
+	$BackgroundParticles.size = get_viewport_rect().size / $Camera2D.zoom
+	print($BackgroundParticles.size)
+	$Particles.size = $BackgroundParticles.size
+	print($Particles.size)
+	$Particles.anchors_preset = Control.PRESET_CENTER
 	
 	fall_speed = _get_speed()
 	gameboard_size = HALF_BOARD_SIZE * 2
@@ -135,7 +140,7 @@ func _process(delta: float) -> void:
 	if not current_piece == null:
 		array = _combine_boards(array, current_piece_array)
 	if not (str(array) + str(hold)).hash() == old_hash:
-		_draw_gameboard_to_tileset(array, GAMEBOARD, TILE_TO_ATLAS, HALF_BOARD_SIZE, SHOW_GHOST_BLOCK, current_piece, gameboard_array)
+		_draw_gameboard_to_tileset(array, GAMEBOARD, HALF_BOARD_SIZE, SHOW_GHOST_BLOCK, current_piece, gameboard_array)
 		_draw_piece(bag[0], old_bag_piece, Vector2i(HALF_BOARD_SIZE.x + 1, -HALF_BOARD_SIZE.y + 2), GAMEBOARD)
 		
 		if hold > -1:
@@ -180,7 +185,7 @@ func _process_current_piece(delta: float):
 				else:
 					current_piece = candidate
 			
-			var move_axis = Input.get_axis("move_left", "move_right")
+			var move_axis: int = int(Input.get_axis("move_left", "move_right"))
 			
 			if move_axis and move_time > MOVE_INTERVAL:
 				current_piece.position.x += move_axis
@@ -232,7 +237,7 @@ func _construct_gameboard_borders(tilemap: TileMap, layer: int, half_size: Vecto
 	tilemap.set_cell(layer, Vector2i(-(half_size.x + 1), (half_size.y)), 0, Vector2i(0, 2))
 
 
-func _initialize_gameboard_array(array: Array, half_size: Vector2i, data: Callable = func(x):
+func _initialize_gameboard_array(array: Array, half_size: Vector2i, data: Callable = func(_x: Vector2i):
 	return 0) -> Array:
 	array.clear()
 	for y in range(half_size.y * 2):
@@ -253,9 +258,8 @@ func _print_2d_array(array: Array) -> String:
 	return currenter_text
 
 
-func _draw_gameboard_to_tileset(e_array: Array, tilemap: TileMap, tile_dictionary: Dictionary, half_size: Vector2i, draw_ghost: bool, ghost_piece: Tetromino, array_no_piece: Array):
+func _draw_gameboard_to_tileset(e_array: Array, tilemap: TileMap, half_size: Vector2i, draw_ghost: bool, ghost_piece: Tetromino, array_no_piece: Array):
 	var array: Array  = e_array.duplicate(true)
-	var ghost_array = null
 	if draw_ghost and not ghost_piece == null:
 		array = _combine_boards(array, _create_board_from_piece(_hard_drop(ghost_piece, array_no_piece), half_size, 7))
 	var layers: Array = []
@@ -269,13 +273,11 @@ func _draw_gameboard_to_tileset(e_array: Array, tilemap: TileMap, tile_dictionar
 			var new_board_value = _2d_index(array, Vector2i(x, y))
 			if not old_board_value == new_board_value:
 				layers[_2d_index(array, Vector2i(x, y))].append(Vector2i(x, y) - half_size)
-#				if new_board_value == 0 or old_board_value == 8:
 				delete[old_board_value].append(Vector2i(x, y) - half_size)
 			if _2d_index(array, Vector2i(x, y)) == 0:
 				tilemap.set_cell(9, Vector2i(x, y) - half_size, 0, Vector2i(3, 0))
 			else:
 				tilemap.set_cell(9, Vector2i(x, y) - half_size)
-	$Label.text = _print_2d_array(array)
 	for i in range(delete.size()):
 		tilemap.set_cells_terrain_connect(i, delete[i], 0, -1, false)
 	for i in range(layers.size()):
@@ -336,7 +338,7 @@ func _create_board_from_piece(piece: Tetromino, half_size: Vector2i, e_data: int
 	var data = e_data
 	if e_data == -1:
 		data = piece.type
-	var array: Array
+	var array: Array = []
 	_initialize_gameboard_array(array, half_size)
 	
 	var piece_array: Array = _rotate_piece(TETROMINOES[piece.type], piece.rotation)
@@ -353,18 +355,18 @@ func _create_board_from_piece(piece: Tetromino, half_size: Vector2i, e_data: int
 
 func _piece_size(piece: Tetromino) -> Dictionary:
 	var array: Array = _rotate_piece(TETROMINOES[piece.type], piece.rotation)
-	var min: Vector2i = Vector2i(array[0].size(), array.size())
-	var max: Vector2i = Vector2i.ZERO
+	var min_pos: Vector2i = Vector2i(array[0].size(), array.size())
+	var max_pos: Vector2i = Vector2i.ZERO
 	for y in range(array.size()):
 		for x in range(array[y].size()):
 			var pos: Vector2i = Vector2i(x, y)
 			var data = _2d_index(array, pos)
 			if data > 0:
-				min.x = min(min.x, pos.x)
-				min.y = min(min.y, pos.y)
-				max.x = max(max.x, pos.x)
-				max.y = max(max.y, pos.y)
-	return { "min": min, "max": max, "size": max - min + Vector2i.ONE }
+				min_pos.x = min(min_pos.x, pos.x)
+				min_pos.y = min(min_pos.y, pos.y)
+				max_pos.x = max(max_pos.x, pos.x)
+				max_pos.y = max(max_pos.y, pos.y)
+	return { "min": min_pos, "max": max_pos, "size": max_pos - min_pos + Vector2i.ONE }
 
 
 func _piece_is_colliding_array(piece_array: Array, board: Array) -> bool:
@@ -392,7 +394,7 @@ func _piece_is_colliding(piece: Tetromino, board: Array, edges_collide: bool = t
 
 
 func _combine_boards(array_0: Array, array_1: Array):
-	var res: Array
+	var res: Array = []
 	_initialize_gameboard_array(res, Vector2i(array_0[0].size(), array_0.size()) / 2)
 	for y in range(res.size()):
 		for x in range(res[y].size()):
@@ -471,8 +473,8 @@ func _swap(a: int, b: int, array: Array):
 	array[b] = temp
 
 
-func _generate_bag(max: int) -> Array:
-	var array: Array = range(max)
+func _generate_bag(max_value: int) -> Array:
+	var array: Array = range(max_value)
 	for i in range(array.size()):
 		_swap(i, randi_range(i, array.size() - 1), array)
 	return array
@@ -485,7 +487,6 @@ func _draw_piece(type: int, old_type: int, pos: Vector2i, tilemap: TileMap):
 	var positions: Array = []
 	if not old_type == -1:
 		var old_offset: Vector2i = pos - dimensions.min
-		var old_dimensions: Dictionary = _piece_size(Tetromino.new(old_type, Vector2i.ZERO, 0))
 		for y in range(piece_array.size()):
 			for x in range(piece_array[y].size()):
 					tilemap.set_cell(old_type + 1, Vector2i(x, y) + old_offset)

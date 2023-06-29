@@ -19,6 +19,7 @@ config/icon="res://art/misc/icon192x192.png"
 
 window/stretch/mode="canvas_items"
 window/dpi/allow_hidpi=false
+window/handheld/orientation=1
 
 [input]
 
@@ -64,3 +65,4 @@ renderer/rendering_method="mobile"
 textures/vram_compression/import_etc2_astc=true
 textures/lossless_compression/force_png=true
 environment/defaults/default_clear_color=Color(0.345098, 0.345098, 0.345098, 1)
+anti_aliasing/quality/use_debanding=true
