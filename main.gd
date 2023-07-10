@@ -117,21 +117,17 @@ var move_time: float
 var label_offsets: Dictionary = {}
 
 func _ready() -> void:
-	$Particles.show()
-	$BackgroundParticles.size = get_viewport_rect().size / $Camera2D.zoom
-	print($BackgroundParticles.size)
-	$Particles.size = $BackgroundParticles.size
-	print($Particles.size)
-	$Particles.anchors_preset = Control.PRESET_CENTER
 	
 	fall_speed = _get_speed()
 	gameboard_size = HALF_BOARD_SIZE * 2
 	
 	_reset_game()
+	_set_positions()
 	
 	_position_text($LinesCleared, Vector2(-1, -1), Vector2(1, -1))
 	_position_text($Next, Vector2(1, -1), Vector2(1, -1))
 	_position_text($Hold, Vector2(1, -1), Vector2(1, -5))
+	GAMEBOARD.clear()
 	_construct_gameboard_borders(GAMEBOARD, 10, HALF_BOARD_SIZE)
 
 func _process(delta: float) -> void:
@@ -149,8 +145,7 @@ func _process(delta: float) -> void:
 		old_hash = (str(array) + str(hold)).hash()
 		old_bag_piece = bag[0]
 		old_hold = hold
-	
-	$LinesCleared.text = "lines" + "\n" + str(lines_cleared)
+		$LinesCleared.text = "lines" + "\n" + str(lines_cleared)
 
 
 func _process_current_piece(delta: float):
@@ -452,8 +447,8 @@ func _lock_piece():
 	var cleared_lines = _get_cleared_lines(gameboard_array)
 	if cleared_lines.size() > 0:
 		for x in cleared_lines:
-			var pos = Vector2(0, -HALF_BOARD_SIZE.y * GAMEBOARD.tile_set.tile_size.y + x * GAMEBOARD.tile_set.tile_size.y)
-			var scene = LINE_CLEAR_EFFECT.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+			var pos = Vector2(0, -HALF_BOARD_SIZE.y + x) * GAMEBOARD.tile_set.tile_size.y * GAMEBOARD.scale.y
+			var scene: GPUParticles2D = LINE_CLEAR_EFFECT.instantiate()
 			scene.position = pos
 			add_child(scene)
 		lines_cleared += cleared_lines.size()
@@ -464,7 +459,7 @@ func _lock_piece():
 	
 	pieces_placed += 1
 	fall_speed = _get_speed(floor(float(lines_cleared) / 10))
-	$Background.material.set_shader_parameter("modulate", 1.0 - 1.0 / (0.2 * lines_cleared + 1.0))
+	$Background.material.set_shader_parameter("modulate", 1.0 - 1.0 / (0.1 * lines_cleared + 1.0))
 
 
 func _swap(a: int, b: int, array: Array):
@@ -487,8 +482,9 @@ func _draw_piece(type: int, old_type: int, pos: Vector2i, tilemap: TileMap):
 	var positions: Array = []
 	if not old_type == -1:
 		var old_offset: Vector2i = pos - dimensions.min
-		for y in range(piece_array.size()):
-			for x in range(piece_array[y].size()):
+		var old_piece_array: Array = TETROMINOES[old_type]
+		for y in range(old_piece_array.size()):
+			for x in range(old_piece_array[y].size()):
 					tilemap.set_cell(old_type + 1, Vector2i(x, y) + old_offset)
 	for y in range(piece_array.size()):
 		for x in range(piece_array[y].size()):
@@ -500,7 +496,7 @@ func _draw_piece(type: int, old_type: int, pos: Vector2i, tilemap: TileMap):
 func _position_text(node: Label, alignment: Vector2, offset: Vector2):
 	if not label_offsets.has(node):
 		label_offsets.merge({ node: node.position })
-	node.position = label_offsets[node] + Vector2(GAMEBOARD.tile_set.tile_size) * (Vector2(HALF_BOARD_SIZE.x, HALF_BOARD_SIZE.y) + offset) * alignment
+	node.position = label_offsets[node] + GAMEBOARD.scale * Vector2(GAMEBOARD.tile_set.tile_size) * (Vector2(HALF_BOARD_SIZE.x, HALF_BOARD_SIZE.y) + offset) * alignment
 
 
 func _reset_game():
@@ -534,3 +530,10 @@ func _get_speed(in_level: float = -1.0) -> float:
 	if in_level == -1.0:
 		level = floor(float(lines_cleared) / 10) - 1
 	return (0.8 - level * 0.007) ** level
+
+
+func _set_positions():
+	$Particles.show()
+	$BackgroundParticles.size = get_viewport_rect().size / $Camera2D.zoom
+	$Particles.size = $BackgroundParticles.size
+	$Particles.anchors_preset = Control.PRESET_CENTER

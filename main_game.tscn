@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://dvqw0lu6ju12p"]
+[gd_scene load_steps=17 format=3 uid="uid://dvqw0lu6ju12p"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_3sko8"]
 [ext_resource type="PackedScene" uid="uid://did0qd7k1q4yx" path="res://explosion/explosion.tscn" id="2_t3rml"]
@@ -42,10 +42,8 @@ shader_parameter/noise = SubResource("NoiseTexture2D_foviw")
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_3t2tj"]
 blend_mode = 1
 
-[sub_resource type="ViewportTexture" id="ViewportTexture_ncaqt"]
+[sub_resource type="ViewportTexture" id="ViewportTexture_3e30a"]
 viewport_path = NodePath("BackgroundParticles")
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_rgpq2"]
 
 [sub_resource type="SystemFont" id="SystemFont_vpxja"]
 
@@ -59,24 +57,22 @@ font = ExtResource("6_dmosu")
 font_size = 50
 outline_size = 3
 
-[sub_resource type="Environment" id="Environment_bomgx"]
+[sub_resource type="Environment" id="Environment_50mgo"]
 background_mode = 3
-tonemap_mode = 1
+tonemap_mode = 2
 glow_enabled = true
-glow_levels/1 = 16.0
-glow_levels/2 = 14.0
-glow_levels/3 = 12.0
-glow_levels/4 = 10.0
-glow_levels/5 = 8.0
-glow_levels/6 = 6.0
-glow_levels/7 = 4.0
+glow_levels/1 = 4.0
+glow_levels/2 = 8.0
+glow_levels/3 = 8.0
+glow_levels/4 = 4.0
+glow_levels/5 = 2.0
+glow_levels/6 = 1.0
 glow_normalized = true
-glow_intensity = 1.0
-glow_strength = 0.82
-glow_blend_mode = 1
+glow_intensity = 1.5
+glow_strength = 1.02
+glow_blend_mode = 0
 glow_hdr_threshold = 0.0
 glow_hdr_scale = 1.0
-glow_map_strength = 1.0
 
 [node name="MainGame" type="Node2D" node_paths=PackedStringArray("GAMEBOARD")]
 script = ExtResource("1_3sko8")
@@ -97,6 +93,7 @@ pivot_offset = Vector2(960, 960)
 color = Color(0.0901961, 0.0901961, 0.0901961, 1)
 
 [node name="Particles" type="TextureRect" parent="."]
+visible = false
 material = SubResource("CanvasItemMaterial_3t2tj")
 anchors_preset = 8
 anchor_left = 0.5
@@ -109,17 +106,10 @@ offset_right = 480.0
 offset_bottom = 480.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = SubResource("ViewportTexture_ncaqt")
+texture = SubResource("ViewportTexture_3e30a")
 
 [node name="Board" parent="." instance=ExtResource("4_w5u2l")]
-material = SubResource("ShaderMaterial_rgpq2")
-layer_1/enabled = true
-layer_2/enabled = true
-layer_3/enabled = true
-layer_4/enabled = true
-layer_5/enabled = true
-layer_6/enabled = true
-layer_7/enabled = true
+layer_0/tile_data = PackedInt32Array()
 layer_8/name = "Ghost"
 layer_8/modulate = Color(1, 1, 1, 0.117647)
 layer_8/z_index = 1
@@ -139,9 +129,9 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = 1423.0
-offset_top = -1673.0
+offset_top = 231.0
 offset_right = 5915.0
-offset_bottom = 5152.0
+offset_bottom = 7056.0
 grow_horizontal = 2
 scale = Vector2(10, 10)
 text = "0"
@@ -152,11 +142,12 @@ material = ExtResource("6_urf63")
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
-offset_top = -362.0
+offset_top = -32.0
 offset_right = 1547.0
-offset_bottom = 362.0
+offset_bottom = 32.0
 grow_vertical = 2
 scale = Vector2(10, 10)
+pivot_offset = Vector2(0, 32)
 text = "next"
 label_settings = SubResource("LabelSettings_calj3")
 
@@ -165,11 +156,11 @@ material = ExtResource("6_urf63")
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
-offset_top = -316.5
 offset_right = 829.0
-offset_bottom = 316.5
+offset_bottom = 64.0
 grow_vertical = 2
 scale = Vector2(10, 10)
+pivot_offset = Vector2(0, 32)
 text = "hold"
 label_settings = SubResource("LabelSettings_calj3")
 
@@ -192,4 +183,4 @@ label_settings = SubResource("LabelSettings_calj3")
 horizontal_alignment = 2
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_bomgx")
+environment = SubResource("Environment_50mgo")
