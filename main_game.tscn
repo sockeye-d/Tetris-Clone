@@ -1,10 +1,11 @@
-[gd_scene load_steps=17 format=3 uid="uid://dvqw0lu6ju12p"]
+[gd_scene load_steps=19 format=3 uid="uid://dvqw0lu6ju12p"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_3sko8"]
 [ext_resource type="PackedScene" uid="uid://did0qd7k1q4yx" path="res://explosion/explosion.tscn" id="2_t3rml"]
 [ext_resource type="Shader" path="res://background.gdshader" id="3_hks3i"]
 [ext_resource type="PackedScene" uid="uid://b2cbp485obcer" path="res://Gameboard/board.tscn" id="4_w5u2l"]
 [ext_resource type="PackedScene" uid="uid://b8kbt8veoa7vv" path="res://Background/background.tscn" id="5_a60ax"]
+[ext_resource type="Script" path="res://main_camera.gd" id="6_2y2ed"]
 [ext_resource type="FontFile" uid="uid://byn5c2lqsino5" path="res://fonts/Dosis-Regular.ttf" id="6_dmosu"]
 [ext_resource type="Material" uid="uid://cxj8ojkguliq6" path="res://text_material.tres" id="6_urf63"]
 
@@ -20,6 +21,7 @@ domain_warp_amplitude = 41.662
 domain_warp_frequency = 0.028
 domain_warp_fractal_octaves = 2
 domain_warp_fractal_lacunarity = 2.96
+metadata/_preview_in_3d_space_ = true
 
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_foviw"]
 seamless = true
@@ -27,7 +29,7 @@ noise = SubResource("FastNoiseLite_66gif")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_j3j32"]
 shader = ExtResource("3_hks3i")
-shader_parameter/color_0 = Color(0.160784, 0.160784, 0.160784, 1)
+shader_parameter/color_0 = Color(0.129412, 0.129412, 0.129412, 1)
 shader_parameter/color_1 = Color(0, 0, 0, 1)
 shader_parameter/direction = Vector2(-1, 2)
 shader_parameter/threshold = 0.698
@@ -45,6 +47,10 @@ blend_mode = 1
 [sub_resource type="ViewportTexture" id="ViewportTexture_3e30a"]
 viewport_path = NodePath("BackgroundParticles")
 
+[sub_resource type="Curve" id="Curve_kx0vu"]
+_data = [Vector2(0, 0), 0.0, 19.6684, 0, 0, Vector2(0.118812, 1), -0.765474, -0.765474, 0, 0, Vector2(0.310231, 0.378947), -1.75971, -1.75971, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 4
+
 [sub_resource type="SystemFont" id="SystemFont_vpxja"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_wixnq"]
@@ -55,7 +61,7 @@ font_size = 10
 line_spacing = 0.0
 font = ExtResource("6_dmosu")
 font_size = 50
-outline_size = 3
+font_color = Color(0.466667, 0.466667, 0.466667, 1)
 
 [sub_resource type="Environment" id="Environment_50mgo"]
 background_mode = 3
@@ -68,8 +74,7 @@ glow_levels/4 = 4.0
 glow_levels/5 = 2.0
 glow_levels/6 = 1.0
 glow_normalized = true
-glow_intensity = 1.5
-glow_strength = 1.02
+glow_intensity = 1.0
 glow_blend_mode = 0
 glow_hdr_threshold = 0.0
 glow_hdr_scale = 1.0
@@ -120,8 +125,13 @@ layer_10/modulate = Color(1, 1, 1, 1)
 layer_10/z_index = 2
 layer_10/tile_data = PackedInt32Array(-655366, 0, 0, -589830, 0, 1, -524294, 0, 1, -458758, 0, 1, -393222, 0, 1, -327686, 0, 1, -262150, 0, 1, -196614, 0, 1, -131078, 0, 1, -65542, 0, 1, -6, 0, 1, 65530, 0, 1, 131066, 0, 1, 196602, 0, 1, 262138, 0, 1, 327674, 0, 1, 393210, 0, 1, 458746, 0, 1, 524282, 0, 1, 589818, 0, 1, 655354, 0, 1, 720890, 0, 2, -655365, 65536, 0, 720891, 65536, 2, -655364, 65536, 0, 720892, 65536, 2, -655363, 65536, 0, 720893, 65536, 2, -655362, 65536, 0, 720894, 65536, 2, -655361, 65536, 0, 720895, 65536, 2, -720896, 65536, 0, 655360, 65536, 2, -720895, 65536, 0, 655361, 65536, 2, -720894, 65536, 0, 655362, 65536, 2, -720893, 65536, 0, 655363, 65536, 2, -720892, 65536, 0, 655364, 65536, 2, -720891, 131072, 0, -655355, 131072, 1, -589819, 131072, 1, -524283, 131072, 1, -458747, 131072, 1, -393211, 131072, 1, -327675, 131072, 1, -262139, 131072, 1, -196603, 131072, 1, -131067, 131072, 1, -65531, 131072, 1, 5, 131072, 1, 65541, 131072, 1, 131077, 131072, 1, 196613, 131072, 1, 262149, 131072, 1, 327685, 131072, 1, 393221, 131072, 1, 458757, 131072, 1, 524293, 131072, 1, 589829, 131072, 1, 655365, 131072, 2)
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="MainCamera" type="Camera2D" parent="."]
 zoom = Vector2(0.1, 0.1)
+script = ExtResource("6_2y2ed")
+curve = SubResource("Curve_kx0vu")
+
+[node name="Timer" type="Timer" parent="MainCamera"]
+one_shot = true
 
 [node name="Label" type="Label" parent="."]
 visible = false
@@ -137,33 +147,6 @@ scale = Vector2(10, 10)
 text = "0"
 label_settings = SubResource("LabelSettings_wixnq")
 
-[node name="Next" type="Label" parent="."]
-material = ExtResource("6_urf63")
-anchors_preset = 4
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_top = -32.0
-offset_right = 1547.0
-offset_bottom = 32.0
-grow_vertical = 2
-scale = Vector2(10, 10)
-pivot_offset = Vector2(0, 32)
-text = "next"
-label_settings = SubResource("LabelSettings_calj3")
-
-[node name="Hold" type="Label" parent="."]
-material = ExtResource("6_urf63")
-anchors_preset = 4
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_right = 829.0
-offset_bottom = 64.0
-grow_vertical = 2
-scale = Vector2(10, 10)
-pivot_offset = Vector2(0, 32)
-text = "hold"
-label_settings = SubResource("LabelSettings_calj3")
-
 [node name="LinesCleared" type="Label" parent="."]
 material = ExtResource("6_urf63")
 anchors_preset = 6
@@ -172,15 +155,44 @@ anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
 offset_left = -2353.0
-offset_top = -316.5
-offset_bottom = -252.5
+offset_top = -325.0
+offset_bottom = -260.0
 grow_horizontal = 0
 grow_vertical = 2
 scale = Vector2(10, 10)
 pivot_offset = Vector2(2353, 0)
+size_flags_horizontal = 4
 text = "lines"
 label_settings = SubResource("LabelSettings_calj3")
 horizontal_alignment = 2
+
+[node name="Hold" type="Label" parent="."]
+material = ExtResource("6_urf63")
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -32.5
+offset_right = 829.0
+offset_bottom = 32.5
+grow_vertical = 2
+scale = Vector2(10, 10)
+pivot_offset = Vector2(0, 32)
+text = "hold"
+label_settings = SubResource("LabelSettings_calj3")
+
+[node name="Next" type="Label" parent="."]
+material = ExtResource("6_urf63")
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -32.5
+offset_right = 1547.0
+offset_bottom = 32.5
+grow_vertical = 2
+scale = Vector2(10, 10)
+pivot_offset = Vector2(0, 32)
+text = "next"
+label_settings = SubResource("LabelSettings_calj3")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_50mgo")

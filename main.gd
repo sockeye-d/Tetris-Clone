@@ -10,6 +10,8 @@ signal death
 @export var MOVE_INTERVAL: float = 0.05
 @export var LINE_CLEAR_EFFECT: PackedScene
 @export var SHOW_GHOST_BLOCK: bool = true
+@export var HARD_DROP_MOVE_AMOUNT: float = -25
+@export var LINE_CLEAR_MOVE_AMOUNT: float = -15
 
 const Tetromino = preload("res://tetromino.gd")
 
@@ -192,6 +194,7 @@ func _process_current_piece(delta: float):
 			if Input.is_action_just_pressed("hard_drop"):
 				current_piece = _hard_drop(current_piece, gameboard_array)
 				_lock_piece()
+				$MainCamera.move(Vector2(0, HARD_DROP_MOVE_AMOUNT))
 			
 			if Input.is_action_just_pressed("hold") and not_held:
 				if not hold == -1:
@@ -452,6 +455,7 @@ func _lock_piece():
 			scene.position = pos
 			add_child(scene)
 		lines_cleared += cleared_lines.size()
+		$MainCamera.move(Vector2(0, LINE_CLEAR_MOVE_AMOUNT * cleared_lines.size()))
 	gameboard_array = _clear_lines(gameboard_array)
 	current_piece = null
 	if bag.size() < TETROMINOES.size():
@@ -534,6 +538,6 @@ func _get_speed(in_level: float = -1.0) -> float:
 
 func _set_positions():
 	$Particles.show()
-	$BackgroundParticles.size = get_viewport_rect().size / $Camera2D.zoom
+	$BackgroundParticles.size = get_viewport_rect().size / $MainCamera.zoom
 	$Particles.size = $BackgroundParticles.size
 	$Particles.anchors_preset = Control.PRESET_CENTER
