@@ -25,5 +25,5 @@ func move(offset_pos: Vector2, time: float = 1.0, easing_curve: Curve = curve, i
 	while not $Timer.is_stopped():
 		var t = 1.0 - $Timer.time_left / $Timer.wait_time
 		offsets[my_key] = offset_pos * easing_curve.sample_baked(t)
-		await get_tree().create_timer(interval).timeout
+		await get_tree().process_frame
 	offsets.erase(my_key)

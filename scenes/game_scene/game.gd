@@ -1,4 +1,5 @@
-extends Node2D
+@tool
+extends Control
 
 signal death
 
@@ -7,89 +8,88 @@ signal death
 @export var TILE_TO_ATLAS: Dictionary = { 0: Vector2i(3, 0), 1: Vector2i(4, 0)}
 @export var BASE_DROP_SPEED: float = 0.1
 @export var FALL_LOCK_MAX: int = 1
-@export var MOVE_INTERVAL: float = 0.05
-@export var LINE_CLEAR_EFFECT: PackedScene
+@export var FIRST_MOVE_INTERVAL: float = 0.2
+@export var MOVE_INTERVAL: float = 0.1
+@export var LINE_CLEAR_EFFECT: PackedScene = preload("res://explosion/explosion.tscn")
 @export var SHOW_GHOST_BLOCK: bool = true
-@export var HARD_DROP_MOVE_AMOUNT: float = -25
-@export var LINE_CLEAR_MOVE_AMOUNT: float = -15
+@export var HARD_DROP_MOVE_AMOUNT: float = -6.0
+@export var LINE_CLEAR_MOVE_AMOUNT: float = -12.0
 
-const Tetromino = preload("res://tetromino.gd")
+const TETROMINOES: Array[Array] = [
+	# I tetromino
+	[[0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0],
+	[0, 1, 1, 1, 1],
+	[0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0]],
+	# J tetromino
+	[[0, 0, 0, 0, 0],
+	[0, 1, 0, 0, 0],
+	[0, 1, 1, 1, 0],
+	[0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0]],
+	# L tetromino
+	[[0, 0, 0, 0, 0],
+	[0, 0, 0, 1, 0],
+	[0, 1, 1, 1, 0],
+	[0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0]],
+	# O tetromino
+	[[0, 0, 0, 0, 0],
+	[0, 0, 1, 1, 0],
+	[0, 0, 1, 1, 0],
+	[0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0]],
+	# S tetromino
+	[[0, 0, 0, 0, 0],
+	[0, 0, 1, 1, 0],
+	[0, 1, 1, 0, 0],
+	[0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0]],
+	# T tetromino
+	[[0, 0, 0, 0, 0],
+	[0, 0, 1, 0, 0],
+	[0, 1, 1, 1, 0],
+	[0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0]],
+	# Z tetromino
+	[[0, 0, 0, 0, 0],
+	[0, 1, 1, 0, 0],
+	[0, 0, 1, 1, 0],
+	[0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0]],
+]
 
-const TETROMINOES: Dictionary = {
-		# I tetromino
-		0: [[0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0],
-			[0, 1, 1, 1, 1],
-			[0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0]],
-		# J tetromino
-		1: [[0, 0, 0, 0, 0],
-			[0, 1, 0, 0, 0],
-			[0, 1, 1, 1, 0],
-			[0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0]],
-		# L tetromino
-		2: [[0, 0, 0, 0, 0],
-			[0, 0, 0, 1, 0],
-			[0, 1, 1, 1, 0],
-			[0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0]],
-		# O tetromino
-		3: [[0, 0, 0, 0, 0],
-			[0, 0, 1, 1, 0],
-			[0, 0, 1, 1, 0],
-			[0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0]],
-		# S tetromino
-		4: [[0, 0, 0, 0, 0],
-			[0, 0, 1, 1, 0],
-			[0, 1, 1, 0, 0],
-			[0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0]],
-		# T tetromino
-		5: [[0, 0, 0, 0, 0],
-			[0, 0, 1, 0, 0],
-			[0, 1, 1, 1, 0],
-			[0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0]],
-		# Z tetromino
-		6: [[0, 0, 0, 0, 0],
-			[0, 1, 1, 0, 0],
-			[0, 0, 1, 1, 0],
-			[0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0]],
-}
+const JLSTZ_KICK_OFFSETS: Array[Array] = [
+	[Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0)],
+	[Vector2i( 0, 0), Vector2i( 1, 0), Vector2i( 1,-1), Vector2i( 0, 2), Vector2i( 1, 2)],
+	[Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0)],
+	[Vector2i( 0, 0), Vector2i(-1, 0), Vector2i(-1,-1), Vector2i( 0, 2), Vector2i(-1, 2)],
+]
 
-const JLSTZ_KICK_OFFSETS: Dictionary = {
-		0: [Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0)],
-		1: [Vector2i( 0, 0), Vector2i(+1, 0), Vector2i(+1,-1), Vector2i( 0,+2), Vector2i(+1,+2)],
-		2: [Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0)],
-		3: [Vector2i( 0, 0), Vector2i(-1, 0), Vector2i(-1,-1), Vector2i( 0,+2), Vector2i(-1,+2)],
-}
+const I_KICK_OFFSETS: Array[Array] = [
+	[Vector2i( 0, 0), Vector2i(-1, 0), Vector2i( 2, 0), Vector2i(-1, 0), Vector2i( 2, 0)],
+	[Vector2i(-1, 0), Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 1), Vector2i( 0,-2)],
+	[Vector2i(-1, 1), Vector2i( 1, 1), Vector2i(-2, 1), Vector2i( 1, 0), Vector2i(-2, 0)],
+	[Vector2i( 0, 1), Vector2i( 0, 1), Vector2i( 0, 1), Vector2i( 0,-1), Vector2i( 0, 2)],
+]
 
-const I_KICK_OFFSETS: Dictionary = {
-		0: [Vector2i( 0, 0), Vector2i(-1, 0), Vector2i(+2, 0), Vector2i(-1, 0), Vector2i(+2, 0)],
-		1: [Vector2i(-1, 0), Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0,+1), Vector2i( 0,-2)],
-		2: [Vector2i(-1,+1), Vector2i(+1,+1), Vector2i(-2,+1), Vector2i(+1, 0), Vector2i(-2, 0)],
-		3: [Vector2i( 0,+1), Vector2i( 0,+1), Vector2i( 0,+1), Vector2i( 0,-1), Vector2i( 0,+2)],
-}
+const O_KICK_OFFSETS: Array[Array] = [
+	[Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0)],
+	[Vector2i( 0,-1), Vector2i( 0,-1), Vector2i( 0,-1), Vector2i( 0,-1), Vector2i( 0,-1)],
+	[Vector2i(-1,-1), Vector2i(-1,-1), Vector2i(-1,-1), Vector2i(-1,-1), Vector2i(-1,-1)],
+	[Vector2i(-1, 0), Vector2i(-1, 0), Vector2i(-1, 0), Vector2i(-1, 0), Vector2i(-1, 0)],
+]
 
-const O_KICK_OFFSETS: Dictionary = {
-		0: [Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0), Vector2i( 0, 0)],
-		1: [Vector2i( 0,-1), Vector2i( 0,-1), Vector2i( 0,-1), Vector2i( 0,-1), Vector2i( 0,-1)],
-		2: [Vector2i(-1,-1), Vector2i(-1,-1), Vector2i(-1,-1), Vector2i(-1,-1), Vector2i(-1,-1)],
-		3: [Vector2i(-1, 0), Vector2i(-1, 0), Vector2i(-1, 0), Vector2i(-1, 0), Vector2i(-1, 0)],
-}
-
-const KICK_OFFSETS: Dictionary = {
-		0: I_KICK_OFFSETS,
-		1: JLSTZ_KICK_OFFSETS,
-		2: JLSTZ_KICK_OFFSETS,
-		3: O_KICK_OFFSETS,
-		4: JLSTZ_KICK_OFFSETS,
-		5: JLSTZ_KICK_OFFSETS,
-		6: JLSTZ_KICK_OFFSETS,
-}
+const KICK_OFFSETS: Array = [
+	I_KICK_OFFSETS,
+	JLSTZ_KICK_OFFSETS,
+	JLSTZ_KICK_OFFSETS,
+	O_KICK_OFFSETS,
+	JLSTZ_KICK_OFFSETS,
+	JLSTZ_KICK_OFFSETS,
+	JLSTZ_KICK_OFFSETS,
+]
 
 var old_hash: int
 var old_gameboard: Array
@@ -102,6 +102,7 @@ var gameboard_size: Vector2i
 
 var lines_cleared: int
 var pieces_placed: int
+var combo: int
 
 var bag: Array
 var hold: int
@@ -115,39 +116,46 @@ var current_piece: Tetromino
 var current_piece_array: Array
 
 var move_time: float
+var move_chain: int
 
 var label_offsets: Dictionary = {}
 
 func _ready() -> void:
+	if not Engine.is_editor_hint():
+		fall_speed = _get_speed()
+		gameboard_size = HALF_BOARD_SIZE * 2
+		_set_positions()
+		
+		_reset_game()
+		GAMEBOARD.clear()
+		_construct_gameboard_borders(GAMEBOARD, 10, HALF_BOARD_SIZE)
 	
-	fall_speed = _get_speed()
-	gameboard_size = HALF_BOARD_SIZE * 2
-	
-	_reset_game()
-	_set_positions()
-	
-	_position_text($LinesCleared, Vector2(-1, -1), Vector2(1, -1))
-	_position_text($Next, Vector2(1, -1), Vector2(1, -1))
-	_position_text($Hold, Vector2(1, -1), Vector2(1, -5))
-	GAMEBOARD.clear()
-	_construct_gameboard_borders(GAMEBOARD, 10, HALF_BOARD_SIZE)
+	_position_text($LinesCleared, Vector2( 1,  1), Vector2( 1, -1))
+	_position_text($Next,         Vector2( 1, -1), Vector2( 1, -1))
+	_position_text($Hold,         Vector2( 1, -1), Vector2( 1, -6))
 
 func _process(delta: float) -> void:
-	_process_current_piece(delta)
-	var array = gameboard_array
-	if not current_piece == null:
-		array = _combine_boards(array, current_piece_array)
-	if not (str(array) + str(hold)).hash() == old_hash:
-		_draw_gameboard_to_tileset(array, GAMEBOARD, HALF_BOARD_SIZE, SHOW_GHOST_BLOCK, current_piece, gameboard_array)
-		_draw_piece(bag[0], old_bag_piece, Vector2i(HALF_BOARD_SIZE.x + 1, -HALF_BOARD_SIZE.y + 2), GAMEBOARD)
-		
-		if hold > -1:
-			_draw_piece(hold, old_hold, Vector2i(HALF_BOARD_SIZE.x + 1, -HALF_BOARD_SIZE.y + 7), GAMEBOARD)
-		
-		old_hash = (str(array) + str(hold)).hash()
-		old_bag_piece = bag[0]
-		old_hold = hold
-		$LinesCleared.text = "lines" + "\n" + str(lines_cleared)
+	if not Engine.is_editor_hint():
+		_process_current_piece(delta)
+		var array = gameboard_array
+		if not current_piece == null:
+			array = _combine_boards(array, current_piece_array)
+		if not (str(array) + str(hold)).hash() == old_hash:
+			_draw_gameboard_to_tileset(array, GAMEBOARD, HALF_BOARD_SIZE, SHOW_GHOST_BLOCK, current_piece, gameboard_array)
+			_draw_piece(bag[0], old_bag_piece, Vector2i(HALF_BOARD_SIZE.x + 1, -HALF_BOARD_SIZE.y + 2), GAMEBOARD)
+			
+			if hold > -1:
+				_draw_piece(hold, old_hold, Vector2i(HALF_BOARD_SIZE.x + 1, -HALF_BOARD_SIZE.y + 7), GAMEBOARD)
+			
+			old_hash = (str(array) + str(hold)).hash()
+			old_bag_piece = bag[0]
+			old_hold = hold
+			$LinesCleared.text = "lines %s" % lines_cleared
+		$Label.text = str(combo)
+	else:
+		_position_text($LinesCleared, Vector2( 1,  1), Vector2( 1, -1))
+		_position_text($Next,         Vector2( 1, -1), Vector2( 1, -1))
+		_position_text($Hold,         Vector2( 1, -1), Vector2( 1, -6))
 
 
 func _process_current_piece(delta: float):
@@ -182,19 +190,22 @@ func _process_current_piece(delta: float):
 				else:
 					current_piece = candidate
 			
-			var move_axis: int = int(Input.get_axis("move_left", "move_right"))
+			var move_axis := Input.get_axis("move_left", "move_right")
 			
-			if move_axis and move_time > MOVE_INTERVAL:
+			if move_axis and (move_time > (FIRST_MOVE_INTERVAL if move_chain <= 1 else MOVE_INTERVAL) or move_time < 0.0):
 				current_piece.position.x += move_axis
 				if _piece_is_colliding(current_piece, gameboard_array, true):
 					current_piece.position.x -= move_axis
-				else:
-					move_time = 0.0
+				move_time = 0.0
+				move_chain += 1
+			elif not move_axis:
+				move_time = -1.0
+				move_chain = 0
 			
 			if Input.is_action_just_pressed("hard_drop"):
 				current_piece = _hard_drop(current_piece, gameboard_array)
-				_lock_piece()
-				$MainCamera.move(Vector2(0, HARD_DROP_MOVE_AMOUNT))
+				var cleared_lines = _lock_piece()
+				$MainCamera.move(Vector2(0, HARD_DROP_MOVE_AMOUNT + LINE_CLEAR_MOVE_AMOUNT * cleared_lines.size()))
 			
 			if Input.is_action_just_pressed("hold") and not_held:
 				if not hold == -1:
@@ -393,13 +404,13 @@ func _piece_is_colliding(piece: Tetromino, board: Array, edges_collide: bool = t
 
 func _combine_boards(array_0: Array, array_1: Array):
 	var res: Array = []
-	_initialize_gameboard_array(res, Vector2i(array_0[0].size(), array_0.size()) / 2)
-	for y in range(res.size()):
-		for x in range(res[y].size()):
+	for y in range(array_0.size()):
+		res.append([])
+		for x in range(array_0[y].size()):
 			var pos = Vector2i(x, y)
 			var data_0 = _2d_index(array_0, pos)
 			var data_1 = _2d_index(array_1, pos)
-			res[y][x] = data_0 if data_0 > 0 else data_1
+			res[y].append(data_0 if data_0 > 0 else data_1)
 	return res
 
 
@@ -447,15 +458,27 @@ func _clear_lines(board: Array) -> Array:
 func _lock_piece():
 	current_piece_array = _create_board_from_piece(current_piece, HALF_BOARD_SIZE)
 	gameboard_array = _combine_boards(gameboard_array, current_piece_array)
-	var cleared_lines = _get_cleared_lines(gameboard_array)
+	var cleared_lines := _get_cleared_lines(gameboard_array)
 	if cleared_lines.size() > 0:
-		for x in cleared_lines:
-			var pos = Vector2(0, -HALF_BOARD_SIZE.y + x) * GAMEBOARD.tile_set.tile_size.y * GAMEBOARD.scale.y
+		for cleared_line in cleared_lines:
+			var gameboard_tile_size := Vector2(GAMEBOARD.tile_set.tile_size) * GAMEBOARD.scale
+			var pos := Vector2(0, -HALF_BOARD_SIZE.y + cleared_line + 0.5) * gameboard_tile_size.y + GAMEBOARD.position
 			var scene: GPUParticles2D = LINE_CLEAR_EFFECT.instantiate()
 			scene.position = pos
+			scene.amount = (combo + 1) * 250
 			add_child(scene)
 		lines_cleared += cleared_lines.size()
-		$MainCamera.move(Vector2(0, LINE_CLEAR_MOVE_AMOUNT * cleared_lines.size()))
+		combo += 1
+		if combo > 1:
+			var combo_text: Label = %Alert.duplicate()
+			combo_text.text += str(combo)
+			var color: Color = GAMEBOARD.get_layer_modulate(current_piece.type + 1)
+			combo_text.modulate = Color(color, combo_text.modulate.a).lightened(0.5)
+			add_child(combo_text)
+			combo_text.animate()
+	else:
+		combo = 0
+
 	gameboard_array = _clear_lines(gameboard_array)
 	current_piece = null
 	if bag.size() < TETROMINOES.size():
@@ -463,7 +486,9 @@ func _lock_piece():
 	
 	pieces_placed += 1
 	fall_speed = _get_speed(floor(float(lines_cleared) / 10))
-	$Background.material.set_shader_parameter("modulate", 1.0 - 1.0 / (0.1 * lines_cleared + 1.0))
+	$Background.material.set_shader_parameter("modulate", 1.0 - 1.0 / (0.2 * lines_cleared + 1.0))
+	
+	return cleared_lines
 
 
 func _swap(a: int, b: int, array: Array):
@@ -485,7 +510,8 @@ func _draw_piece(type: int, old_type: int, pos: Vector2i, tilemap: TileMap):
 	var offset: Vector2i = pos - dimensions.min
 	var positions: Array = []
 	if not old_type == -1:
-		var old_offset: Vector2i = pos - dimensions.min
+		var old_dimensions = _piece_size(Tetromino.new(old_type, Vector2i.ZERO, 0))
+		var old_offset: Vector2i = pos - old_dimensions.min
 		var old_piece_array: Array = TETROMINOES[old_type]
 		for y in range(old_piece_array.size()):
 			for x in range(old_piece_array[y].size()):
@@ -498,9 +524,15 @@ func _draw_piece(type: int, old_type: int, pos: Vector2i, tilemap: TileMap):
 
 
 func _position_text(node: Label, alignment: Vector2, offset: Vector2):
-	if not label_offsets.has(node):
-		label_offsets.merge({ node: node.position })
-	node.position = label_offsets[node] + GAMEBOARD.scale * Vector2(GAMEBOARD.tile_set.tile_size) * (Vector2(HALF_BOARD_SIZE.x, HALF_BOARD_SIZE.y) + offset) * alignment
+	#if node not in label_offsets:
+		#label_offsets[node] = node.position
+	node.position = Vector2(0.0, -node.size.y * 0.5) + (
+		+ GAMEBOARD.scale
+			* Vector2(GAMEBOARD.tile_set.tile_size)
+			* (Vector2(HALF_BOARD_SIZE) + offset)
+			* alignment
+		+ GAMEBOARD.position
+	)
 
 
 func _reset_game():
@@ -537,7 +569,4 @@ func _get_speed(in_level: float = -1.0) -> float:
 
 
 func _set_positions():
-	$Particles.show()
-	$BackgroundParticles.size = get_viewport_rect().size / $MainCamera.zoom
-	$Particles.size = $BackgroundParticles.size
-	$Particles.anchors_preset = Control.PRESET_CENTER
+	pass

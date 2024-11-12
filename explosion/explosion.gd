@@ -1,7 +1,5 @@
 extends GPUParticles2D
 
-@export var DURATION_ALIVE: float = 2.0
-
 var time_alive: float
 
 # Called when the node enters the scene tree for the first time.
@@ -13,5 +11,5 @@ func _ready():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	time_alive += delta
-	if time_alive > DURATION_ALIVE:
+	if time_alive > lifetime + 2.0:
 		queue_free()

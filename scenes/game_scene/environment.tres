@@ -1,0 +1,20 @@
+[gd_resource type="Environment" format=3 uid="uid://1v5fc4btw4y6"]
+
+[resource]
+background_mode = 3
+ambient_light_source = 1
+reflected_light_source = 1
+tonemap_mode = 2
+glow_enabled = true
+glow_levels/1 = 4.0
+glow_levels/2 = 8.0
+glow_levels/3 = 8.0
+glow_levels/4 = 4.0
+glow_levels/5 = 2.0
+glow_levels/6 = 1.0
+glow_normalized = true
+glow_intensity = 1.0
+glow_strength = 1.2
+glow_blend_mode = 0
+glow_hdr_threshold = 0.0
+glow_hdr_scale = 1.0
