@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://fian7j4j6a54"]
+[gd_scene load_steps=6 format=3 uid="uid://fian7j4j6a54"]
 
 [ext_resource type="Script" path="res://scenes/main_scene/main_scene.gd" id="1_6iw8k"]
+[ext_resource type="PackedScene" uid="uid://bdbyc67kypq8f" path="res://scenes/main_menu/main_menu.tscn" id="2_34m6u"]
 [ext_resource type="Shader" path="res://scenes/main_scene/transition.gdshader" id="3_34m6u"]
 [ext_resource type="Script" path="res://scenes/main_scene/transition.gd" id="4_34m6u"]
 
@@ -13,6 +14,8 @@ shader_parameter/rgb_separation = 0.0
 
 [node name="Node" type="Node"]
 script = ExtResource("1_6iw8k")
+
+[node name="MainMenu" parent="." instance=ExtResource("2_34m6u")]
 
 [node name="Transition" type="ColorRect" parent="."]
 unique_name_in_owner = true

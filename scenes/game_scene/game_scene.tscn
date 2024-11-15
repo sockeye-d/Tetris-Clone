@@ -1,15 +1,17 @@
-[gd_scene load_steps=11 format=3 uid="uid://2f8e2yd30ep6"]
+[gd_scene load_steps=13 format=3 uid="uid://2f8e2yd30ep6"]
 
 [ext_resource type="World3D" uid="uid://cmcwflhfcc64o" path="res://scenes/game_scene/game_world.tres" id="1_miq82"]
 [ext_resource type="PackedScene" uid="uid://dvqw0lu6ju12p" path="res://scenes/game_scene/game.tscn" id="2_j5hk1"]
-[ext_resource type="Texture2D" uid="uid://c1f7kec51k5kr" path="res://art/icons/button_left.svg" id="3_ueiaa"]
-[ext_resource type="Script" path="res://classes/joystick_button.gd" id="4_daj04"]
-[ext_resource type="Texture2D" uid="uid://dvt4hq1dotrwl" path="res://art/icons/button_right.svg" id="5_mlphb"]
-[ext_resource type="Texture2D" uid="uid://dvu744pck4rh7" path="res://art/icons/button_hard_drop.svg" id="6_opqoc"]
-[ext_resource type="Texture2D" uid="uid://d1n7shn3shag" path="res://art/icons/button_drop.svg" id="7_bpcsf"]
-[ext_resource type="Texture2D" uid="uid://ltimcgvb0c8v" path="res://art/icons/button_rotate_ccw.svg" id="8_3d2pr"]
-[ext_resource type="Texture2D" uid="uid://uo4e471dh8h4" path="res://art/icons/button_rotate_cw.svg" id="9_h5hfs"]
-[ext_resource type="Texture2D" uid="uid://kfic3juu18t" path="res://art/icons/button_hold.svg" id="10_snaye"]
+[ext_resource type="Texture2D" uid="uid://c1f7kec51k5kr" path="res://assets/art/icons/button_left.svg" id="3_ueiaa"]
+[ext_resource type="Script" path="res://classes/ui/joystick_button.gd" id="4_daj04"]
+[ext_resource type="Texture2D" uid="uid://dvt4hq1dotrwl" path="res://assets/art/icons/button_right.svg" id="5_mlphb"]
+[ext_resource type="Texture2D" uid="uid://dvu744pck4rh7" path="res://assets/art/icons/button_hard_drop.svg" id="6_opqoc"]
+[ext_resource type="Texture2D" uid="uid://d1n7shn3shag" path="res://assets/art/icons/button_drop.svg" id="7_bpcsf"]
+[ext_resource type="Texture2D" uid="uid://ltimcgvb0c8v" path="res://assets/art/icons/button_rotate_ccw.svg" id="8_3d2pr"]
+[ext_resource type="Texture2D" uid="uid://uo4e471dh8h4" path="res://assets/art/icons/button_rotate_cw.svg" id="9_h5hfs"]
+[ext_resource type="Texture2D" uid="uid://kfic3juu18t" path="res://assets/art/icons/button_hold.svg" id="10_snaye"]
+[ext_resource type="Texture2D" uid="uid://bntmky7rm0kli" path="res://assets/art/icons/button_pause.svg" id="11_hqmgi"]
+[ext_resource type="Script" path="res://scenes/game_scene/pause_button.gd" id="12_3di6p"]
 
 [node name="GameScene" type="Control"]
 layout_mode = 3
@@ -33,24 +35,23 @@ own_world_3d = true
 world_3d = ExtResource("1_miq82")
 handle_input_locally = false
 gui_snap_controls_to_pixels = false
-size = Vector2i(648, 1152)
+size = Vector2i(1080, 2640)
 render_target_update_mode = 4
 
 [node name="MainGame" parent="SubViewportContainer/SubViewport" instance=ExtResource("2_j5hk1")]
 
 [node name="LeftJoystickContainer" type="Control" parent="."]
-modulate = Color(1, 1, 1, 0.27451)
 layout_mode = 1
-anchors_preset = 2
 anchor_top = 1.0
+anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = 25.0
-offset_top = -360.0
-offset_right = 303.0
-offset_bottom = -49.0
+offset_left = 50.0
+offset_top = -1000.0
+offset_right = -50.0
+offset_bottom = -500.0
 grow_vertical = 0
 
-[node name="Left" type="TextureRect" parent="LeftJoystickContainer"]
+[node name="MoveLeftButton" type="TextureRect" parent="LeftJoystickContainer"]
 layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
@@ -63,7 +64,7 @@ texture = ExtResource("3_ueiaa")
 script = ExtResource("4_daj04")
 action_name = &"move_left"
 
-[node name="Right" type="TextureRect" parent="LeftJoystickContainer"]
+[node name="MoveRightButton" type="TextureRect" parent="LeftJoystickContainer"]
 layout_mode = 1
 anchors_preset = 6
 anchor_left = 1.0
@@ -79,7 +80,7 @@ texture = ExtResource("5_mlphb")
 script = ExtResource("4_daj04")
 action_name = &"move_right"
 
-[node name="Top" type="TextureRect" parent="LeftJoystickContainer"]
+[node name="HardDropButton" type="TextureRect" parent="LeftJoystickContainer"]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -92,7 +93,7 @@ texture = ExtResource("6_opqoc")
 script = ExtResource("4_daj04")
 action_name = &"hard_drop"
 
-[node name="Bottom" type="TextureRect" parent="LeftJoystickContainer"]
+[node name="DropButton" type="TextureRect" parent="LeftJoystickContainer"]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -109,21 +110,19 @@ script = ExtResource("4_daj04")
 action_name = &"drop"
 
 [node name="RightJoystickContainer" type="Control" parent="."]
-modulate = Color(1, 1, 1, 0.27451)
 layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
+anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -303.0
-offset_top = -360.0
-offset_right = -25.0
-offset_bottom = -49.0
-grow_horizontal = 0
+offset_left = 50.0
+offset_top = -1000.0
+offset_right = -50.0
+offset_bottom = -500.0
+grow_horizontal = 2
 grow_vertical = 0
 
-[node name="Left" type="TextureRect" parent="RightJoystickContainer"]
+[node name="RotateLeftButton" type="TextureRect" parent="RightJoystickContainer"]
 layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
@@ -136,7 +135,7 @@ texture = ExtResource("8_3d2pr")
 script = ExtResource("4_daj04")
 action_name = &"rotate_left"
 
-[node name="Right" type="TextureRect" parent="RightJoystickContainer"]
+[node name="TextureRect" type="TextureRect" parent="RightJoystickContainer"]
 layout_mode = 1
 anchors_preset = 6
 anchor_left = 1.0
@@ -152,7 +151,7 @@ texture = ExtResource("9_h5hfs")
 script = ExtResource("4_daj04")
 action_name = &"rotate_right"
 
-[node name="Bottom" type="TextureRect" parent="RightJoystickContainer"]
+[node name="HoldButton" type="TextureRect" parent="RightJoystickContainer"]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -167,3 +166,27 @@ grow_vertical = 0
 texture = ExtResource("10_snaye")
 script = ExtResource("4_daj04")
 action_name = &"hold"
+
+[node name="PauseButton" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -188.0
+offset_right = 40.0
+offset_bottom = -108.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("11_hqmgi")
+script = ExtResource("12_3di6p")
+
+[node name="ReferenceRect" type="ReferenceRect" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

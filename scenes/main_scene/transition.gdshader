@@ -50,8 +50,9 @@ vec4 textureBc(sampler2D sampler, vec2 texCoords, float lod)
 }
 
 void fragment() {
-	COLOR.r = textureBc(screen_texture, (SCREEN_UV - 0.5) * zoom + 0.5 - vec2(rgb_separation, 0.0), blur).r * tint.r;
-	COLOR.g = textureBc(screen_texture, (SCREEN_UV - 0.5) * zoom + 0.5, blur).g * tint.g;
-	COLOR.b = textureBc(screen_texture, (SCREEN_UV - 0.5) * zoom + 0.5 + vec2(rgb_separation, 0.0), blur).b * tint.b;
+	vec2 uv = (SCREEN_UV - 0.5) * zoom + 0.5;
+	COLOR.r = texture(screen_texture, uv - vec2(rgb_separation, 0.0), blur).r * tint.r;
+	COLOR.g = texture(screen_texture, uv, blur).g * tint.g;
+	COLOR.b = texture(screen_texture, uv + vec2(rgb_separation, 0.0), blur).b * tint.b;
 	COLOR.a = tint.a;
 }

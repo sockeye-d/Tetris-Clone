@@ -23,10 +23,10 @@ vec4 textureBc(sampler2D sampler, vec2 texCoords, float lod)
 {
    vec2 texSize = vec2(textureSize(sampler, int(lod)));
    vec2 invTexSize = 1.0 / texSize;
-   
+
    texCoords = texCoords * texSize - 0.5;
 
-   
+
     vec2 fxy = fract(texCoords);
     texCoords -= fxy;
 
@@ -34,12 +34,12 @@ vec4 textureBc(sampler2D sampler, vec2 texCoords, float lod)
     vec4 ycubic = cubic(fxy.y);
 
     vec4 c = texCoords.xxyy + vec2(-0.5, 1.5).xyxy;
-    
+
     vec4 s = vec4(xcubic.xz + xcubic.yw, ycubic.xz + ycubic.yw);
     vec4 offset = c + vec4 (xcubic.yw, ycubic.yw) / s;
-    
+
     offset *= invTexSize.xxyy;
-    
+
     vec4 sample0 = textureLod(sampler, offset.xz, lod);
     vec4 sample1 = textureLod(sampler, offset.yz, lod);
     vec4 sample2 = textureLod(sampler, offset.xw, lod);

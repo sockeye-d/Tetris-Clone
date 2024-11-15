@@ -10,7 +10,7 @@ signal death
 @export var FALL_LOCK_MAX: int = 1
 @export var FIRST_MOVE_INTERVAL: float = 0.2
 @export var MOVE_INTERVAL: float = 0.1
-@export var LINE_CLEAR_EFFECT: PackedScene = preload("res://explosion/explosion.tscn")
+@export var LINE_CLEAR_EFFECT: PackedScene = preload("res://scenes/game_scene/explosion/explosion.tscn")
 @export var SHOW_GHOST_BLOCK: bool = true
 @export var HARD_DROP_MOVE_AMOUNT: float = -6.0
 @export var LINE_CLEAR_MOVE_AMOUNT: float = -12.0
@@ -151,7 +151,6 @@ func _process(delta: float) -> void:
 			old_bag_piece = bag[0]
 			old_hold = hold
 			$LinesCleared.text = "lines %s" % lines_cleared
-		$Label.text = str(combo)
 	else:
 		_position_text($LinesCleared, Vector2( 1,  1), Vector2( 1, -1))
 		_position_text($Next,         Vector2( 1, -1), Vector2( 1, -1))
@@ -465,7 +464,7 @@ func _lock_piece():
 			var pos := Vector2(0, -HALF_BOARD_SIZE.y + cleared_line + 0.5) * gameboard_tile_size.y + GAMEBOARD.position
 			var scene: GPUParticles2D = LINE_CLEAR_EFFECT.instantiate()
 			scene.position = pos
-			scene.amount = (combo + 1) * 250
+			#scene.amount = (combo + 1) * scene.amount
 			add_child(scene)
 		lines_cleared += cleared_lines.size()
 		combo += 1
@@ -476,6 +475,9 @@ func _lock_piece():
 			combo_text.modulate = Color(color, combo_text.modulate.a).lightened(0.5)
 			add_child(combo_text)
 			combo_text.animate()
+		var vibration_strength := 1.0 - exp(-cleared_lines.size() * 0.35 - combo + 1)
+		Input.vibrate_handheld(300, vibration_strength)
+		print(vibration_strength)
 	else:
 		combo = 0
 
