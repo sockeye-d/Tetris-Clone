@@ -124,7 +124,6 @@ func _ready() -> void:
 	if not Engine.is_editor_hint():
 		fall_speed = _get_speed()
 		gameboard_size = HALF_BOARD_SIZE * 2
-		_set_positions()
 		
 		_reset_game()
 		GAMEBOARD.clear()
@@ -477,7 +476,6 @@ func _lock_piece():
 			combo_text.animate()
 		var vibration_strength := 1.0 - exp(-cleared_lines.size() * 0.35 - combo + 1)
 		Input.vibrate_handheld(300, vibration_strength)
-		print(vibration_strength)
 	else:
 		combo = 0
 
@@ -568,7 +566,3 @@ func _get_speed(in_level: float = -1.0) -> float:
 	if in_level == -1.0:
 		level = floor(float(lines_cleared) / 10) - 1
 	return (0.8 - level * 0.007) ** level
-
-
-func _set_positions():
-	pass

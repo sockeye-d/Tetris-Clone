@@ -20,7 +20,7 @@ var t: Tween
 func _ready() -> void:
 	material = ShaderMaterial.new()
 	material.shader = preload("res://scenes/main_scene/transition.gdshader")
-	#material.reset_state()
+	# the shader parameter properties don't exist until they are enumerated?????
 	material.get_property_list()
 
 
@@ -36,12 +36,11 @@ func transition_begin() -> void:
 	t.set_parallel()
 	
 	t.tween_callback(show)
-	#print(material.get_property_list().find_custom(func(element): return element.name == "shader_parameter/blur"))
 	(t.tween_property(self, ^"material:shader_parameter/blur", 3.0, TRANS_DURATION)
 		.set_ease(Tween.EASE_OUT)
 		.set_trans(DEFAULT_TRANS))
 	
-	(t.tween_property(self, ^"material:shader_parameter/rgb_separation", 0.01, TRANS_DURATION)
+	(t.tween_property(self, ^"material:shader_parameter/rgb_separation", 0.03, TRANS_DURATION)
 		.set_ease(Tween.EASE_OUT)
 		.set_trans(DEFAULT_TRANS))
 	

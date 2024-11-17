@@ -11,10 +11,10 @@ var scene_stack: Array[Node]
 var modal_transition_stack: Array[ModalTransition]
 var current_scene: Node:
 	get:
-		return scene_stack.back()
+		return scene_stack.back() if scene_stack else null
 var current_modal_transition: ModalTransition:
 	get:
-		return modal_transition_stack.back()
+		return modal_transition_stack.back() if modal_transition_stack else null
 
 
 func _ready() -> void:
@@ -43,6 +43,7 @@ func switch_to_scene(to_scene: PackedScene, modal: bool = false) -> void:
 		scene_stack.push_back(to_scene.instantiate())
 		add_child(current_modal_transition)
 		add_child(current_scene)
+		(current_scene as Modal).transition_in()
 		
 		m.transition_begin()
 	else:
@@ -70,6 +71,7 @@ func switch_back() -> void:
 		return
 	
 	if last_was_modal():
+		(current_scene as Modal).transition_out()
 		await current_modal_transition.transition_end()
 		remove_child(current_modal_transition)
 		remove_child(current_scene)
