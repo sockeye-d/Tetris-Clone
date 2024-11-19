@@ -1,12 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://bdbyc67kypq8f"]
+[gd_scene load_steps=3 format=3 uid="uid://bdbyc67kypq8f"]
 
-[sub_resource type="GDScript" id="GDScript_1b6gl"]
-script/source = "extends Button
-
-
-func _ready() -> void:
-	pressed.connect(Main.switch_to_scene.bind(preload(\"res://scenes/game_scene/game_scene.tscn\")))
-"
+[ext_resource type="Script" path="res://classes/ui/switch_to_scene_button.gd" id="1_fsom3"]
+[ext_resource type="PackedScene" uid="uid://2f8e2yd30ep6" path="res://scenes/game_scene/game_scene.tscn" id="2_0ebjn"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -29,7 +24,8 @@ grow_vertical = 2
 [node name="PlayButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 text = "play"
-script = SubResource("GDScript_1b6gl")
+script = ExtResource("1_fsom3")
+target_scene = ExtResource("2_0ebjn")
 
 [node name="SettingsButton" type="Button" parent="VBoxContainer"]
 visible = false

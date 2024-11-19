@@ -3,7 +3,7 @@ class_name ModalTransition extends ColorRect
 
 
 const DEFAULT_TRANS := Tween.TRANS_EXPO
-const TRANS_DURATION := 0.5
+const TRANS_DURATION := 1.0
 
 
 signal transition_completed
@@ -36,11 +36,11 @@ func transition_begin() -> void:
 	t.set_parallel()
 	
 	t.tween_callback(show)
-	(t.tween_property(self, ^"material:shader_parameter/blur", 3.0, TRANS_DURATION)
+	(t.tween_property(self, ^"material:shader_parameter/blur", 5.0, TRANS_DURATION)
 		.set_ease(Tween.EASE_OUT)
 		.set_trans(DEFAULT_TRANS))
 	
-	(t.tween_property(self, ^"material:shader_parameter/rgb_separation", 0.03, TRANS_DURATION)
+	(t.tween_property(self, ^"material:shader_parameter/rgb_separation", 0.06, TRANS_DURATION)
 		.set_ease(Tween.EASE_OUT)
 		.set_trans(DEFAULT_TRANS))
 	
@@ -55,8 +55,8 @@ func transition_begin() -> void:
 
 func transition_middle() -> void:
 	show()
-	material["shader_parameter/blur"] = 3.0
-	material["shader_parameter/rgb_separation"] = 0.01
+	material["shader_parameter/blur"] = 5.0
+	material["shader_parameter/rgb_separation"] = 0.06
 	material["shader_parameter/tint"] = Vector4(0.5, 0.5, 0.5, 1.0)
 
 
