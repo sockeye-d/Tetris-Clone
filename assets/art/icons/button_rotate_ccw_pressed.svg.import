@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c1f7kec51k5kr"
-path="res://.godot/imported/button_left.svg-0ff124b544514f5029d8fdd5ae482a95.ctex"
+uid="uid://bdqui2uu7rvo4"
+path="res://.godot/imported/button_rotate_ccw_pressed.svg-b3f20faac8f1da47325d528c684d8936.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/icons/button_left.svg"
-dest_files=["res://.godot/imported/button_left.svg-0ff124b544514f5029d8fdd5ae482a95.ctex"]
+source_file="res://assets/art/icons/button_rotate_ccw_pressed.svg"
+dest_files=["res://.godot/imported/button_rotate_ccw_pressed.svg-b3f20faac8f1da47325d528c684d8936.ctex"]
 
 [params]
 

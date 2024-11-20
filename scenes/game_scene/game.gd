@@ -15,6 +15,23 @@ signal death
 @export var HARD_DROP_MOVE_AMOUNT: float = -6.0
 @export var LINE_CLEAR_MOVE_AMOUNT: float = -12.0
 
+@export var line_clear_test: PackedInt32Array
+@export_tool_button("test explosion") var line_clear_test_fn = func():
+		for cleared_line in line_clear_test:
+			var gameboard_tile_size := Vector2(GAMEBOARD.tile_set.tile_size) * GAMEBOARD.scale
+			var pos := Vector2(0, -HALF_BOARD_SIZE.y + cleared_line + 0.5) * gameboard_tile_size.y + GAMEBOARD.position
+			var scene: GPUParticles2D = LINE_CLEAR_EFFECT.instantiate()
+			scene.position = pos
+			#scene.amount = (combo + 1) * scene.amount
+			add_child(scene)
+			scene.explode()
+
+@onready var main_camera: MainCamera = %MainCamera
+@onready var lines_cleared_label: Label = %LinesCleared
+@onready var hold_label: Label = %Hold
+@onready var next_label: Label = %Next
+@onready var alert_label: Label = %Alert
+
 const TETROMINOES: Array[Array] = [
 	# I tetromino
 	[[0, 0, 0, 0, 0],
@@ -91,6 +108,16 @@ const KICK_OFFSETS: Array = [
 	JLSTZ_KICK_OFFSETS,
 ]
 
+const TETROMINO_SIZE: PackedInt32Array = [
+	4,
+	3,
+	3,
+	2,
+	4,
+	3,
+	4,
+]
+
 var old_hash: int
 var old_gameboard: Array
 var old_ghost: Array
@@ -129,9 +156,10 @@ func _ready() -> void:
 		GAMEBOARD.clear()
 		_construct_gameboard_borders(GAMEBOARD, 10, HALF_BOARD_SIZE)
 	
-	_position_text($LinesCleared, Vector2( 1,  1), Vector2( 1, -1))
-	_position_text($Next,         Vector2( 1, -1), Vector2( 1, -1))
-	_position_text($Hold,         Vector2( 1, -1), Vector2( 1, -6))
+	var board_size := Vector2(GAMEBOARD.tile_set.tile_size * HALF_BOARD_SIZE) * GAMEBOARD.scale * 2.0
+	for label: Label in [next_label, hold_label, lines_cleared_label]:
+		label.size.x = board_size.x
+		label.position = Vector2(-1, 1) * Vector2(GAMEBOARD.tile_set.tile_size) * (Vector2(HALF_BOARD_SIZE) + Vector2(0, 0)) * GAMEBOARD.scale + GAMEBOARD.position
 
 func _process(delta: float) -> void:
 	if not Engine.is_editor_hint():
@@ -141,19 +169,20 @@ func _process(delta: float) -> void:
 			array = _combine_boards(array, current_piece_array)
 		if not (str(array) + str(hold)).hash() == old_hash:
 			_draw_gameboard_to_tileset(array, GAMEBOARD, HALF_BOARD_SIZE, SHOW_GHOST_BLOCK, current_piece, gameboard_array)
-			_draw_piece(bag[0], old_bag_piece, Vector2i(HALF_BOARD_SIZE.x + 1, -HALF_BOARD_SIZE.y + 2), GAMEBOARD)
+			_draw_piece(bag[0], old_bag_piece, Vector2i(-HALF_BOARD_SIZE.x, HALF_BOARD_SIZE.y + 2), GAMEBOARD, HORIZONTAL_ALIGNMENT_LEFT)
 			
-			if hold > -1:
-				_draw_piece(hold, old_hold, Vector2i(HALF_BOARD_SIZE.x + 1, -HALF_BOARD_SIZE.y + 7), GAMEBOARD)
+			if hold != -1:
+				_draw_piece(hold, old_hold, Vector2i(HALF_BOARD_SIZE.x, HALF_BOARD_SIZE.y + 2), GAMEBOARD, HORIZONTAL_ALIGNMENT_RIGHT)
 			
 			old_hash = (str(array) + str(hold)).hash()
 			old_bag_piece = bag[0]
 			old_hold = hold
-			$LinesCleared.text = "lines %s" % lines_cleared
+			lines_cleared_label.text = "lines\n%s" % lines_cleared
 	else:
-		_position_text($LinesCleared, Vector2( 1,  1), Vector2( 1, -1))
-		_position_text($Next,         Vector2( 1, -1), Vector2( 1, -1))
-		_position_text($Hold,         Vector2( 1, -1), Vector2( 1, -6))
+		var board_size := Vector2(GAMEBOARD.tile_set.tile_size * HALF_BOARD_SIZE) * GAMEBOARD.scale * 2.0
+		for label: Label in [next_label, hold_label, lines_cleared_label]:
+			label.size.x = board_size.x
+			label.position = Vector2(-1, 1) * Vector2(GAMEBOARD.tile_set.tile_size) * (Vector2(HALF_BOARD_SIZE) + Vector2(0, 0)) * GAMEBOARD.scale + GAMEBOARD.position
 
 
 func _process_current_piece(delta: float):
@@ -202,8 +231,8 @@ func _process_current_piece(delta: float):
 			
 			if Input.is_action_just_pressed("hard_drop"):
 				current_piece = _hard_drop(current_piece, gameboard_array)
-				var cleared_lines = _lock_piece()
-				$MainCamera.move(Vector2(0, HARD_DROP_MOVE_AMOUNT + LINE_CLEAR_MOVE_AMOUNT * cleared_lines.size()))
+				var cleared_lines := _lock_piece()
+				main_camera.move(Vector2(0, HARD_DROP_MOVE_AMOUNT + LINE_CLEAR_MOVE_AMOUNT * cleared_lines.size()))
 			
 			if Input.is_action_just_pressed("hold") and not_held:
 				if not hold == -1:
@@ -360,20 +389,27 @@ func _create_board_from_piece(piece: Tetromino, half_size: Vector2i, e_data: int
 	return array
 
 
-func _piece_size(piece: Tetromino) -> Dictionary:
+var piece_sizes: Dictionary[Tetromino, Dictionary]
+
+
+func _piece_size(piece: Tetromino) -> Dictionary[StringName, Vector2i]:
+	#if piece in piece_sizes:
+		#return piece_sizes[piece]
 	var array: Array = _rotate_piece(TETROMINOES[piece.type], piece.rotation)
 	var min_pos: Vector2i = Vector2i(array[0].size(), array.size())
 	var max_pos: Vector2i = Vector2i.ZERO
 	for y in range(array.size()):
 		for x in range(array[y].size()):
 			var pos: Vector2i = Vector2i(x, y)
-			var data = _2d_index(array, pos)
+			var data: int = _2d_index(array, pos)
 			if data > 0:
-				min_pos.x = min(min_pos.x, pos.x)
-				min_pos.y = min(min_pos.y, pos.y)
-				max_pos.x = max(max_pos.x, pos.x)
-				max_pos.y = max(max_pos.y, pos.y)
-	return { "min": min_pos, "max": max_pos, "size": max_pos - min_pos + Vector2i.ONE }
+				min_pos.x = mini(min_pos.x, pos.x)
+				min_pos.y = mini(min_pos.y, pos.y)
+				max_pos.x = maxi(max_pos.x, pos.x)
+				max_pos.y = maxi(max_pos.y, pos.y)
+	var piece_info: Dictionary[StringName, Vector2i] = { "min": min_pos, "max": max_pos, "size": max_pos - min_pos + Vector2i.ONE }
+	#piece_sizes[piece] = piece_info
+	return piece_info
 
 
 func _piece_is_colliding_array(piece_array: Array, board: Array) -> bool:
@@ -425,15 +461,15 @@ func _kick(piece: Tetromino, previous_rotation: int, board: Array) -> Tetromino:
 
 func _create_new_piece(type: int):
 	var piece: Tetromino = Tetromino.new(type, Vector2i.ZERO, 0)
-	var dimensions = _piece_size(piece)
+	var dimensions := _piece_size(piece)
 	piece.position.x = HALF_BOARD_SIZE.x - dimensions.min.x - ceil(dimensions.size.x / 2.0)
 	piece.position.y = -dimensions.max.y
 	not_held = true
 	return piece
 
 
-func _get_cleared_lines(board: Array) -> PackedInt64Array:
-	var cleared_lines: PackedInt64Array = []
+func _get_cleared_lines(board: Array) -> PackedInt32Array:
+	var cleared_lines: PackedInt32Array = []
 	for y in range(board.size()):
 		if not board[y].has(0):
 			cleared_lines.append(y)
@@ -443,7 +479,7 @@ func _get_cleared_lines(board: Array) -> PackedInt64Array:
 func _clear_lines(board: Array) -> Array:
 	var new_board: Array = board.duplicate(true)
 	for y in range(new_board.size()):
-#		var y = new_board.size() - oy - 1
+		#var y = new_board.size() - oy - 1
 		if not new_board[y].has(0):
 			new_board.remove_at(y)
 			new_board.insert(0, [])
@@ -453,7 +489,7 @@ func _clear_lines(board: Array) -> Array:
 	return new_board.duplicate(true)
 
 
-func _lock_piece():
+func _lock_piece() -> PackedInt32Array:
 	current_piece_array = _create_board_from_piece(current_piece, HALF_BOARD_SIZE)
 	gameboard_array = _combine_boards(gameboard_array, current_piece_array)
 	var cleared_lines := _get_cleared_lines(gameboard_array)
@@ -465,10 +501,11 @@ func _lock_piece():
 			scene.position = pos
 			#scene.amount = (combo + 1) * scene.amount
 			add_child(scene)
+			scene.explode()
 		lines_cleared += cleared_lines.size()
 		combo += 1
 		if combo > 1:
-			var combo_text: Label = %Alert.duplicate()
+			var combo_text := alert_label.duplicate() as Label
 			combo_text.text += str(combo)
 			var color: Color = GAMEBOARD.get_layer_modulate(current_piece.type + 1)
 			combo_text.modulate = Color(color, combo_text.modulate.a).lightened(0.5)
@@ -486,7 +523,6 @@ func _lock_piece():
 	
 	pieces_placed += 1
 	fall_speed = _get_speed(floor(float(lines_cleared) / 10))
-	$Background.material.set_shader_parameter("modulate", 1.0 - 1.0 / (0.2 * lines_cleared + 1.0))
 	
 	return cleared_lines
 
@@ -504,20 +540,24 @@ func _generate_bag(max_value: int) -> Array:
 	return array
 
 
-func _draw_piece(type: int, old_type: int, pos: Vector2i, tilemap: TileMap):
-	var piece_array: Array = TETROMINOES[type]
-	var dimensions: Dictionary = _piece_size(Tetromino.new(type, Vector2i.ZERO, 0))
+func _draw_piece(type: int, old_type: int, pos: Vector2i, tilemap: TileMap, alignment: HorizontalAlignment):
+	var piece_array := TETROMINOES[type]
+	var dimensions := _piece_size(Tetromino.new(type, Vector2i.ZERO, 0))
 	var offset: Vector2i = pos - dimensions.min
+	if alignment == HORIZONTAL_ALIGNMENT_RIGHT:
+		offset.x -= dimensions.size.x
 	var positions: Array = []
 	if not old_type == -1:
-		var old_dimensions = _piece_size(Tetromino.new(old_type, Vector2i.ZERO, 0))
+		var old_dimensions := _piece_size(Tetromino.new(old_type, Vector2i.ZERO, 0))
 		var old_offset: Vector2i = pos - old_dimensions.min
+		if alignment == HORIZONTAL_ALIGNMENT_RIGHT:
+			old_offset.x -= old_dimensions.size.x
 		var old_piece_array: Array = TETROMINOES[old_type]
-		for y in range(old_piece_array.size()):
-			for x in range(old_piece_array[y].size()):
+		for y in old_piece_array.size():
+			for x in old_piece_array[y].size():
 					tilemap.set_cell(old_type + 1, Vector2i(x, y) + old_offset)
-	for y in range(piece_array.size()):
-		for x in range(piece_array[y].size()):
+	for y in piece_array.size():
+		for x in piece_array[y].size():
 			if piece_array[y][x] > 0:
 				positions.append(Vector2i(x, y) + offset)
 	tilemap.set_cells_terrain_connect(type + 1, positions, 0, 0, true)
@@ -562,7 +602,7 @@ func _new_game_piece():
 
 
 func _get_speed(in_level: float = -1.0) -> float:
-	var level = in_level - 1
+	var level := in_level - 1
 	if in_level == -1.0:
-		level = floor(float(lines_cleared) / 10) - 1
+		level = floorf(lines_cleared / 10.0) - 1
 	return (0.8 - level * 0.007) ** level

@@ -11,10 +11,10 @@ var scene_stack: Array[Node]
 var modal_transition_stack: Array[ModalTransition]
 var current_scene: Node:
 	get:
-		return scene_stack.back() if scene_stack else null
+		return scene_stack[-1] if scene_stack else null
 var current_modal_transition: ModalTransition:
 	get:
-		return modal_transition_stack.back() if modal_transition_stack else null
+		return modal_transition_stack[-1] if modal_transition_stack else null
 
 
 func _ready() -> void:

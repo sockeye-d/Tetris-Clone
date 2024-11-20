@@ -19,6 +19,7 @@ config/icon="res://assets/art/misc/icon192x192.png"
 [autoload]
 
 Main="*res://scenes/main_scene/main_scene.tscn"
+HapticsManager="*res://classes/autoloads/haptics_manager.gd"
 
 [display]
 
@@ -26,6 +27,7 @@ window/size/viewport_width=1080
 window/size/viewport_height=2640
 window/size/window_width_override=540
 window/size/window_height_override=1320
+window/energy_saving/keep_screen_on=false
 window/subwindows/embed_subwindows=false
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"

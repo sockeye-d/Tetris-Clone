@@ -34,7 +34,7 @@ func transition_begin() -> void:
 		.set_ease(DEFAULT_EASE_IN)
 		.set_trans(DEFAULT_TRANS))
 	
-	(t.tween_property(self, ^"material:shader_parameter/zoom", 0.0, TRANS_DURATION)
+	(t.tween_property(self, ^"material:shader_parameter/zoom", 2.0, TRANS_DURATION)
 		.set_ease(DEFAULT_EASE_IN)
 		.set_trans(DEFAULT_TRANS))
 	
@@ -51,12 +51,12 @@ func transition_middle() -> void:
 	show()
 	material["shader_parameter/blur"] = 7.0
 	material["shader_parameter/tint"] = Vector4(0.0, 0.0, 0.0, 1.0)
-	material["shader_parameter/zoom"] = 0.0
+	material["shader_parameter/zoom"] = 2.0
 	material["shader_parameter/rgb_separation"] = 0.1
 
 
 func transition_end() -> void:
-	material["shader_parameter/zoom"] = 3.0
+	material["shader_parameter/zoom"] = 0.0
 	if t and t.is_valid():
 		t.kill()
 	t = create_tween()

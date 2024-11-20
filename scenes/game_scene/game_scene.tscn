@@ -1,17 +1,26 @@
-[gd_scene load_steps=13 format=3 uid="uid://2f8e2yd30ep6"]
+[gd_scene load_steps=22 format=3 uid="uid://2f8e2yd30ep6"]
 
 [ext_resource type="World3D" uid="uid://cmcwflhfcc64o" path="res://scenes/game_scene/game_world.tres" id="1_miq82"]
 [ext_resource type="PackedScene" uid="uid://dvqw0lu6ju12p" path="res://scenes/game_scene/game.tscn" id="2_j5hk1"]
 [ext_resource type="Texture2D" uid="uid://c1f7kec51k5kr" path="res://assets/art/icons/button_left.svg" id="3_ueiaa"]
 [ext_resource type="Script" path="res://classes/ui/joystick_button.gd" id="4_daj04"]
+[ext_resource type="Texture2D" uid="uid://bvwee6vut4t2x" path="res://assets/art/icons/button_left_pressed.svg" id="5_jytbd"]
 [ext_resource type="Texture2D" uid="uid://dvt4hq1dotrwl" path="res://assets/art/icons/button_right.svg" id="5_mlphb"]
 [ext_resource type="Texture2D" uid="uid://dvu744pck4rh7" path="res://assets/art/icons/button_hard_drop.svg" id="6_opqoc"]
+[ext_resource type="Script" path="res://classes/haptic_feedbacker.gd" id="6_v03ia"]
 [ext_resource type="Texture2D" uid="uid://d1n7shn3shag" path="res://assets/art/icons/button_drop.svg" id="7_bpcsf"]
+[ext_resource type="Texture2D" uid="uid://cbfagd3tkaty" path="res://assets/art/icons/button_right_pressed.svg" id="7_iprv4"]
 [ext_resource type="Texture2D" uid="uid://ltimcgvb0c8v" path="res://assets/art/icons/button_rotate_ccw.svg" id="8_3d2pr"]
+[ext_resource type="Texture2D" uid="uid://chkx4s1gn6k2v" path="res://assets/art/icons/button_hard_drop_pressed.svg" id="9_1ypwy"]
 [ext_resource type="Texture2D" uid="uid://uo4e471dh8h4" path="res://assets/art/icons/button_rotate_cw.svg" id="9_h5hfs"]
 [ext_resource type="Texture2D" uid="uid://kfic3juu18t" path="res://assets/art/icons/button_hold.svg" id="10_snaye"]
 [ext_resource type="Texture2D" uid="uid://bntmky7rm0kli" path="res://assets/art/icons/button_pause.svg" id="11_hqmgi"]
+[ext_resource type="Texture2D" uid="uid://ul66ykr0wnr6" path="res://assets/art/icons/button_drop_pressed.svg" id="11_hunbn"]
 [ext_resource type="Script" path="res://scenes/game_scene/pause_button.gd" id="12_3di6p"]
+[ext_resource type="Texture2D" uid="uid://bdqui2uu7rvo4" path="res://assets/art/icons/button_rotate_ccw_pressed.svg" id="13_hn7ev"]
+[ext_resource type="Texture2D" uid="uid://bkql5ykj5mfqg" path="res://assets/art/icons/button_rotate_cw_pressed.svg" id="15_ojnix"]
+[ext_resource type="Texture2D" uid="uid://cv0acyy07hjcc" path="res://assets/art/icons/button_hold_pressed.svg" id="16_ojnix"]
+[ext_resource type="Texture2D" uid="uid://c8p460jjakv1w" path="res://assets/art/icons/button_pause_pressed.svg" id="19_v03ia"]
 
 [node name="GameScene" type="Control"]
 layout_mode = 3
@@ -20,6 +29,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="SubViewportContainer" type="SubViewportContainer" parent="."]
 layout_mode = 1
@@ -28,6 +38,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="SubViewportContainer"]
@@ -42,14 +53,14 @@ render_target_update_mode = 4
 
 [node name="LeftJoystickContainer" type="Control" parent="."]
 layout_mode = 1
+anchors_preset = 2
 anchor_top = 1.0
-anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = 50.0
-offset_top = -1000.0
-offset_right = -50.0
-offset_bottom = -500.0
+offset_top = -821.0
+offset_right = 540.0
+offset_bottom = -41.0
 grow_vertical = 0
+mouse_filter = 2
 
 [node name="MoveLeftButton" type="TextureRect" parent="LeftJoystickContainer"]
 layout_mode = 1
@@ -60,9 +71,17 @@ offset_top = -56.0
 offset_right = 112.0
 offset_bottom = 56.0
 grow_vertical = 2
+mouse_filter = 2
 texture = ExtResource("3_ueiaa")
 script = ExtResource("4_daj04")
 action_name = &"move_left"
+unpressed_texture = ExtResource("3_ueiaa")
+pressed_texture = ExtResource("5_jytbd")
+
+[node name="HapticFeedbacker" type="Node" parent="LeftJoystickContainer/MoveLeftButton"]
+script = ExtResource("6_v03ia")
+duration_ms = 50
+metadata/_custom_type_script = ExtResource("6_v03ia")
 
 [node name="MoveRightButton" type="TextureRect" parent="LeftJoystickContainer"]
 layout_mode = 1
@@ -76,9 +95,16 @@ offset_top = -56.0
 offset_bottom = 56.0
 grow_horizontal = 0
 grow_vertical = 2
+mouse_filter = 2
 texture = ExtResource("5_mlphb")
 script = ExtResource("4_daj04")
 action_name = &"move_right"
+unpressed_texture = ExtResource("5_mlphb")
+pressed_texture = ExtResource("7_iprv4")
+
+[node name="HapticFeedbacker" type="Node" parent="LeftJoystickContainer/MoveRightButton"]
+script = ExtResource("6_v03ia")
+duration_ms = 50
 
 [node name="HardDropButton" type="TextureRect" parent="LeftJoystickContainer"]
 layout_mode = 1
@@ -89,9 +115,16 @@ offset_left = -56.0
 offset_right = 56.0
 offset_bottom = 112.0
 grow_horizontal = 2
+mouse_filter = 2
 texture = ExtResource("6_opqoc")
 script = ExtResource("4_daj04")
 action_name = &"hard_drop"
+unpressed_texture = ExtResource("6_opqoc")
+pressed_texture = ExtResource("9_1ypwy")
+
+[node name="HapticFeedbacker" type="Node" parent="LeftJoystickContainer/HardDropButton"]
+script = ExtResource("6_v03ia")
+duration_ms = 50
 
 [node name="DropButton" type="TextureRect" parent="LeftJoystickContainer"]
 layout_mode = 1
@@ -105,24 +138,32 @@ offset_top = -112.0
 offset_right = 56.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 texture = ExtResource("7_bpcsf")
 script = ExtResource("4_daj04")
 action_name = &"drop"
+unpressed_texture = ExtResource("7_bpcsf")
+pressed_texture = ExtResource("11_hunbn")
+
+[node name="HapticFeedbacker" type="Node" parent="LeftJoystickContainer/DropButton"]
+script = ExtResource("6_v03ia")
+duration_ms = 50
 
 [node name="RightJoystickContainer" type="Control" parent="."]
 layout_mode = 1
-anchor_left = 0.5
+anchors_preset = 3
+anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 50.0
-offset_top = -1000.0
-offset_right = -50.0
-offset_bottom = -500.0
-grow_horizontal = 2
+offset_left = -540.0
+offset_top = -821.0
+offset_bottom = -41.0
+grow_horizontal = 0
 grow_vertical = 0
+mouse_filter = 2
 
-[node name="RotateLeftButton" type="TextureRect" parent="RightJoystickContainer"]
+[node name="RotateCCWButton" type="TextureRect" parent="RightJoystickContainer"]
 layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
@@ -131,11 +172,18 @@ offset_top = -56.0
 offset_right = 112.0
 offset_bottom = 56.0
 grow_vertical = 2
+mouse_filter = 2
 texture = ExtResource("8_3d2pr")
 script = ExtResource("4_daj04")
 action_name = &"rotate_left"
+unpressed_texture = ExtResource("8_3d2pr")
+pressed_texture = ExtResource("13_hn7ev")
 
-[node name="TextureRect" type="TextureRect" parent="RightJoystickContainer"]
+[node name="HapticFeedbacker" type="Node" parent="RightJoystickContainer/RotateCCWButton"]
+script = ExtResource("6_v03ia")
+duration_ms = 50
+
+[node name="RotateCWButton" type="TextureRect" parent="RightJoystickContainer"]
 layout_mode = 1
 anchors_preset = 6
 anchor_left = 1.0
@@ -147,9 +195,16 @@ offset_top = -56.0
 offset_bottom = 56.0
 grow_horizontal = 0
 grow_vertical = 2
+mouse_filter = 2
 texture = ExtResource("9_h5hfs")
 script = ExtResource("4_daj04")
 action_name = &"rotate_right"
+unpressed_texture = ExtResource("9_h5hfs")
+pressed_texture = ExtResource("15_ojnix")
+
+[node name="HapticFeedbacker" type="Node" parent="RightJoystickContainer/RotateCWButton"]
+script = ExtResource("6_v03ia")
+duration_ms = 50
 
 [node name="HoldButton" type="TextureRect" parent="RightJoystickContainer"]
 layout_mode = 1
@@ -163,11 +218,19 @@ offset_top = -112.0
 offset_right = 56.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 texture = ExtResource("10_snaye")
 script = ExtResource("4_daj04")
 action_name = &"hold"
+unpressed_texture = ExtResource("10_snaye")
+pressed_texture = ExtResource("16_ojnix")
+
+[node name="HapticFeedbacker" type="Node" parent="RightJoystickContainer/HoldButton"]
+script = ExtResource("6_v03ia")
+duration_ms = 50
 
 [node name="PauseButton" type="TextureRect" parent="."]
+process_mode = 3
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.5
@@ -180,13 +243,21 @@ offset_right = 40.0
 offset_bottom = -108.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 texture = ExtResource("11_hqmgi")
 script = ExtResource("12_3di6p")
+unpressed_texture = ExtResource("11_hqmgi")
+pressed_texture = ExtResource("19_v03ia")
 
-[node name="ReferenceRect" type="ReferenceRect" parent="."]
-layout_mode = 1
-anchors_preset = -1
-anchor_right = 0.5
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="HapticFeedbacker" type="Node" parent="PauseButton"]
+script = ExtResource("6_v03ia")
+metadata/_custom_type_script = ExtResource("6_v03ia")
+
+[connection signal="pressed" from="LeftJoystickContainer/MoveLeftButton" to="LeftJoystickContainer/MoveLeftButton/HapticFeedbacker" method="vibrate"]
+[connection signal="pressed" from="LeftJoystickContainer/MoveRightButton" to="LeftJoystickContainer/MoveRightButton/HapticFeedbacker" method="vibrate"]
+[connection signal="pressed" from="LeftJoystickContainer/HardDropButton" to="LeftJoystickContainer/HardDropButton/HapticFeedbacker" method="vibrate"]
+[connection signal="pressed" from="LeftJoystickContainer/DropButton" to="LeftJoystickContainer/DropButton/HapticFeedbacker" method="vibrate"]
+[connection signal="pressed" from="RightJoystickContainer/RotateCCWButton" to="RightJoystickContainer/RotateCCWButton/HapticFeedbacker" method="vibrate"]
+[connection signal="pressed" from="RightJoystickContainer/RotateCWButton" to="RightJoystickContainer/RotateCWButton/HapticFeedbacker" method="vibrate"]
+[connection signal="pressed" from="RightJoystickContainer/HoldButton" to="RightJoystickContainer/HoldButton/HapticFeedbacker" method="vibrate"]
+[connection signal="pressed" from="PauseButton" to="PauseButton/HapticFeedbacker" method="vibrate"]

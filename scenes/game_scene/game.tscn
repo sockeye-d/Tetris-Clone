@@ -1,51 +1,21 @@
-[gd_scene load_steps=16 format=3 uid="uid://dvqw0lu6ju12p"]
+[gd_scene load_steps=12 format=3 uid="uid://dvqw0lu6ju12p"]
 
 [ext_resource type="Script" path="res://scenes/game_scene/game.gd" id="1_3sko8"]
-[ext_resource type="Shader" path="res://scenes/game_scene/background.gdshader" id="3_hks3i"]
-[ext_resource type="World3D" uid="uid://cmcwflhfcc64o" path="res://scenes/game_scene/game_world.tres" id="4_vef74"]
 [ext_resource type="PackedScene" uid="uid://b2cbp485obcer" path="res://scenes/game_scene/board/board.tscn" id="4_w5u2l"]
-[ext_resource type="PackedScene" uid="uid://b8kbt8veoa7vv" path="res://scenes/game_scene/background/background.tscn" id="5_a60ax"]
 [ext_resource type="Script" path="res://scenes/game_scene/main_camera.gd" id="6_2y2ed"]
 [ext_resource type="Script" path="res://scenes/game_scene/alert.gd" id="9_kh40w"]
 
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_66gif"]
-frequency = 0.0102
-fractal_type = 0
-fractal_octaves = 1
-cellular_return_type = 6
-domain_warp_enabled = true
-domain_warp_type = 1
-domain_warp_amplitude = 41.662
-domain_warp_frequency = 0.028
-domain_warp_fractal_octaves = 2
-domain_warp_fractal_lacunarity = 2.96
-metadata/_preview_in_3d_space_ = true
+[sub_resource type="Gradient" id="Gradient_700et"]
+interpolation_color_space = 2
+colors = PackedColorArray(0.0587371, 0.0587371, 0.0587371, 1, 0.113046, 0.113046, 0.113046, 1)
 
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_l5ukw"]
-seamless = true
-noise = SubResource("FastNoiseLite_66gif")
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_j3j32"]
-shader = ExtResource("3_hks3i")
-shader_parameter/color_0 = Color(0.0451598, 0.0451598, 0.0451598, 1)
-shader_parameter/color_1 = Color(0, 0, 0, 1)
-shader_parameter/direction = Vector2(-1, 2)
-shader_parameter/threshold = 0.2
-shader_parameter/smoothness = 1.0
-shader_parameter/movement_direction_0 = Vector4(1, 1, 0.025, 0.5)
-shader_parameter/movement_direction_1 = Vector4(1, 0, 0.01, 1)
-shader_parameter/movement_direction_2 = Vector3(1, 0, 0.01)
-shader_parameter/modulate = 0.0
-shader_parameter/noise = SubResource("NoiseTexture2D_l5ukw")
-shader_parameter/dither = 0.04
-shader_parameter/colors = PackedColorArray()
-
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_0g1er"]
-blend_mode = 1
-
-[sub_resource type="Curve" id="Curve_kx0vu"]
-_data = [Vector2(0, 0), 0.0, 19.6684, 0, 0, Vector2(0.0771812, 1), -14.2901, -14.2901, 0, 0, Vector2(0.483871, 0.0526315), -1.43963, -1.43963, 0, 0, Vector2(0.582796, 0), 0.0, 0.0, 0, 0]
-point_count = 4
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_o347i"]
+gradient = SubResource("Gradient_700et")
+width = 4
+height = 4
+use_hdr = true
+fill_from = Vector2(0, 1)
+fill_to = Vector2(0.299145, 0)
 
 [sub_resource type="LabelSettings" id="LabelSettings_calj3"]
 font_size = 100
@@ -55,7 +25,15 @@ font_color = Color(0.466667, 0.466667, 0.466667, 1)
 blend_mode = 1
 
 [sub_resource type="LabelSettings" id="LabelSettings_7jtj5"]
-font_size = 90
+font_size = 250
+
+[sub_resource type="Curve" id="Curve_700et"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.0978723, 0.446258), 2.11228, 2.11228, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="Curve" id="Curve_o347i"]
+_data = [Vector2(0, 0), 0.0, -0.0306723, 0, 0, Vector2(0.923404, 0.725717), 1.94586, 1.94586, 0, 0, Vector2(1, 1), 0.050673, 0.0, 0, 0]
+point_count = 3
 
 [node name="MainGame" type="Control" node_paths=PackedStringArray("GAMEBOARD")]
 layout_mode = 3
@@ -67,9 +45,9 @@ grow_vertical = 2
 script = ExtResource("1_3sko8")
 GAMEBOARD = NodePath("Board")
 MOVE_INTERVAL = 0.05
+line_clear_test = PackedInt32Array(0, 1, 5)
 
-[node name="Background" type="ColorRect" parent="."]
-material = SubResource("ShaderMaterial_j3j32")
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = -1.0
@@ -78,27 +56,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.0901961, 0.0901961, 0.0901961, 1)
-
-[node name="Particles" type="SubViewportContainer" parent="."]
-modulate = Color(1, 1, 1, 0.168627)
-material = SubResource("CanvasItemMaterial_0g1er")
-layout_mode = 1
-anchors_preset = -1
-anchor_left = -0.5
-anchor_top = -0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-stretch = true
-
-[node name="BackgroundParticles" parent="Particles" instance=ExtResource("5_a60ax")]
-world_3d = ExtResource("4_vef74")
-handle_input_locally = false
-size = Vector2i(1080, 2640)
-render_target_update_mode = 4
+texture = SubResource("GradientTexture2D_o347i")
 
 [node name="Board" parent="." instance=ExtResource("4_w5u2l")]
-position = Vector2(-144, -465)
+unique_name_in_owner = true
 layer_8/name = "Ghost2"
 layer_8/modulate = Color(1, 1, 1, 0.117647)
 layer_8/z_index = 1
@@ -108,47 +69,52 @@ layer_10/z_index = 2
 layer_10/tile_data = PackedInt32Array(-655366, 0, 0, -589830, 0, 1, -524294, 0, 1, -458758, 0, 1, -393222, 0, 1, -327686, 0, 1, -262150, 0, 1, -196614, 0, 1, -131078, 0, 1, -65542, 0, 1, -6, 0, 1, 65530, 0, 1, 131066, 0, 1, 196602, 0, 1, 262138, 0, 1, 327674, 0, 1, 393210, 0, 1, 458746, 0, 1, 524282, 0, 1, 589818, 0, 1, 655354, 0, 1, 720890, 0, 2, -655365, 65536, 0, 720891, 65536, 2, -655364, 65536, 0, 720892, 65536, 2, -655363, 65536, 0, 720893, 65536, 2, -655362, 65536, 0, 720894, 65536, 2, -655361, 65536, 0, 720895, 65536, 2, -720896, 65536, 0, 655360, 65536, 2, -720895, 65536, 0, 655361, 65536, 2, -720894, 65536, 0, 655362, 65536, 2, -720893, 65536, 0, 655363, 65536, 2, -720892, 65536, 0, 655364, 65536, 2, -720891, 131072, 0, -655355, 131072, 1, -589819, 131072, 1, -524283, 131072, 1, -458747, 131072, 1, -393211, 131072, 1, -327675, 131072, 1, -262139, 131072, 1, -196603, 131072, 1, -131067, 131072, 1, -65531, 131072, 1, 5, 131072, 1, 65541, 131072, 1, 131077, 131072, 1, 196613, 131072, 1, 262149, 131072, 1, 327685, 131072, 1, 393221, 131072, 1, 458757, 131072, 1, 524293, 131072, 1, 589829, 131072, 1, 655365, 131072, 2)
 
 [node name="MainCamera" type="Camera2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(0, 552)
 script = ExtResource("6_2y2ed")
-curve = SubResource("Curve_kx0vu")
 
 [node name="Timer" type="Timer" parent="MainCamera"]
 one_shot = true
 
 [node name="LinesCleared" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
 layout_mode = 1
-offset_left = 240.0
-offset_top = -104.5
-offset_right = 830.0
-offset_bottom = 326.5
+offset_left = -320.0
+offset_top = 640.0
+offset_right = 320.0
+offset_bottom = 1071.0
 size_flags_horizontal = 4
-text = "lines"
+text = "lines
+0"
 label_settings = SubResource("LabelSettings_calj3")
-vertical_alignment = 1
+horizontal_alignment = 1
 
 [node name="Hold" type="Label" parent="."]
-layout_mode = 1
-offset_left = 240.0
-offset_top = -936.5
-offset_right = 803.0
-offset_bottom = -505.5
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = -320.0
+offset_top = 640.0
+offset_right = 320.0
+offset_bottom = 1071.0
 text = "hold"
 label_settings = SubResource("LabelSettings_calj3")
-vertical_alignment = 1
+horizontal_alignment = 2
 
 [node name="Next" type="Label" parent="."]
-layout_mode = 1
-offset_left = 240.0
-offset_top = -1256.5
-offset_right = 803.0
-offset_bottom = -825.5
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = -320.0
+offset_top = 640.0
+offset_right = 320.0
+offset_bottom = 1071.0
 text = "next"
 label_settings = SubResource("LabelSettings_calj3")
-vertical_alignment = 1
 
 [node name="Alert" type="Label" parent="."]
 unique_name_in_owner = true
 visible = false
-modulate = Color(0.996078, 0.996078, 0.996078, 0)
+modulate = Color(1, 1, 1, 0)
 material = SubResource("CanvasItemMaterial_xrrl0")
 layout_mode = 1
 anchors_preset = 8
@@ -156,15 +122,17 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -684.5
-offset_top = -1377.5
-offset_right = -395.5
-offset_bottom = -1262.5
+offset_left = -942.0
+offset_top = -1478.5
+offset_right = -138.0
+offset_bottom = -1161.5
 grow_horizontal = 2
 grow_vertical = 2
-pivot_offset = Vector2(144.5, 57.5)
+pivot_offset = Vector2(402, 158.5)
 text = "combo x"
 label_settings = SubResource("LabelSettings_7jtj5")
 script = ExtResource("9_kh40w")
+scale_curve = SubResource("Curve_700et")
+modulate_curve = SubResource("Curve_o347i")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]

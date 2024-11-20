@@ -1,31 +1,28 @@
-extends Camera2D
+@tool
+class_name MainCamera extends Camera2D
 
-@export var curve: Curve
+@export_tool_button("bounce") var test := func():
+	move(Vector2(0.0, -30.0), 1.0)
 
-var offsets: Dictionary[int, Vector2]
+var offsets: Dictionary[StringName, Vector2]
 var unique_key: int = 0
-
-# Called when the node enters the scene tree for the first time.
-func _ready():
-	pass # Replace with function body.
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
-	position = Vector2.ZERO
+	offset = Vector2.ZERO
 	for offset_key in offsets:
-		position += offsets[offset_key]
+		offset += offsets[offset_key]
 
 
-func move(offset_pos: Vector2, time: float = 1.0, easing_curve: Curve = curve):
-	var my_key = unique_key
-	offsets.merge({ my_key: Vector2.ZERO })
+func move(offset_pos: Vector2, time: float = 1.0):
+	var my_key := StringName(str(unique_key))
 	unique_key += 1
+	offsets[my_key] = offset_pos
 	var tween := create_tween()
-	tween.tween_method(
-		func(value: float): 
-			var t := value
-			offsets[my_key] = offset_pos * easing_curve.sample_baked(t),
-		0.0, 1.0, time
-	)
+	tween.tween_property(self, "offsets:" + str(my_key), Vector2.ZERO, time).set_custom_interpolator(ease_elastic)
 	tween.tween_callback(func(): offsets.erase(my_key))
+
+
+func ease_elastic(t: float) -> float:
+	return 1.0 - cos(5 * PI  * t) * pow(1.0 - t, 3.0)

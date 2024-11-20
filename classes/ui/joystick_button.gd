@@ -2,10 +2,18 @@
 class_name JoystickButton extends TouchscreenButtonControl
 
 
+
+
 @export var action_name: StringName:
 	set(value):
 		action_name = value
 		update_configuration_warnings()
+@export_tool_button("Add haptic feedback node") var _add_haptic_feedback_node := func():
+	var hf := HapticFeedbacker.new()
+	pressed.connect(hf.vibrate, CONNECT_PERSIST)
+	add_child(hf, true)
+	hf.owner = owner
+	hf.name = "HapticFeedbacker"
 
 
 func _get_configuration_warnings() -> PackedStringArray:
