@@ -15,22 +15,15 @@ signal death
 @export var HARD_DROP_MOVE_AMOUNT: float = -6.0
 @export var LINE_CLEAR_MOVE_AMOUNT: float = -12.0
 
-@export var line_clear_test: PackedInt32Array
-@export_tool_button("test explosion") var line_clear_test_fn = func():
-		for cleared_line in line_clear_test:
-			var gameboard_tile_size := Vector2(GAMEBOARD.tile_set.tile_size) * GAMEBOARD.scale
-			var pos := Vector2(0, -HALF_BOARD_SIZE.y + cleared_line + 0.5) * gameboard_tile_size.y + GAMEBOARD.position
-			var scene: GPUParticles2D = LINE_CLEAR_EFFECT.instantiate()
-			scene.position = pos
-			#scene.amount = (combo + 1) * scene.amount
-			add_child(scene)
-			scene.explode()
-
 @onready var main_camera: MainCamera = %MainCamera
 @onready var lines_cleared_label: Label = %LinesCleared
 @onready var hold_label: Label = %Hold
 @onready var next_label: Label = %Next
 @onready var alert_label: Label = %Alert
+@onready var background: MainGameBackground = %Background
+const BackgroundParticlesType = preload("res://scenes/game_scene/background_particles.gd")
+@onready var background_particles: BackgroundParticlesType = %BackgroundParticles
+
 
 const TETROMINOES: Array[Array] = [
 	# I tetromino
@@ -155,6 +148,8 @@ func _ready() -> void:
 		_reset_game()
 		GAMEBOARD.clear()
 		_construct_gameboard_borders(GAMEBOARD, 10, HALF_BOARD_SIZE)
+		
+		death.connect(Main.switch_to_scene.bind(preload("res://scenes/modals/game_over_menu/game_over_menu.tscn"), true))
 	
 	var board_size := Vector2(GAMEBOARD.tile_set.tile_size * HALF_BOARD_SIZE) * GAMEBOARD.scale * 2.0
 	for label: Label in [next_label, hold_label, lines_cleared_label]:
@@ -177,7 +172,7 @@ func _process(delta: float) -> void:
 			old_hash = (str(array) + str(hold)).hash()
 			old_bag_piece = bag[0]
 			old_hold = hold
-			lines_cleared_label.text = "lines\n%s" % lines_cleared
+			lines_cleared_label.text = "lines %s" % lines_cleared
 	else:
 		var board_size := Vector2(GAMEBOARD.tile_set.tile_size * HALF_BOARD_SIZE) * GAMEBOARD.scale * 2.0
 		for label: Label in [next_label, hold_label, lines_cleared_label]:
@@ -232,6 +227,9 @@ func _process_current_piece(delta: float):
 			if Input.is_action_just_pressed("hard_drop"):
 				current_piece = _hard_drop(current_piece, gameboard_array)
 				var cleared_lines := _lock_piece()
+				if cleared_lines:
+					background.pulse(remap(cleared_lines.size(), 0.0, 4.0, 0.0, 0.5))
+					background_particles.pulse(cleared_lines.size())
 				main_camera.move(Vector2(0, HARD_DROP_MOVE_AMOUNT + LINE_CLEAR_MOVE_AMOUNT * cleared_lines.size()))
 			
 			if Input.is_action_just_pressed("hold") and not_held:

@@ -105,5 +105,11 @@ func switch_back_to_first() -> void:
 	await transition.transition_end()
 
 
+func clear_history() -> void:
+	while scene_stack.size() > 2:
+		scene_stack.pop_back()
+		modal_transition_stack.pop_back()
+
+
 func last_was_modal() -> bool:
 	return current_modal_transition != null

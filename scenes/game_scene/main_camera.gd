@@ -8,7 +8,6 @@ var offsets: Dictionary[StringName, Vector2]
 var unique_key: int = 0
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
 	offset = Vector2.ZERO
 	for offset_key in offsets:

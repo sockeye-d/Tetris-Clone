@@ -37,6 +37,10 @@ window/handheld/orientation=1
 
 project/assembly_name="Tetris Clone"
 
+[editor_plugins]
+
+enabled=PackedStringArray()
+
 [gui]
 
 theme/custom="res://assets/main.theme"

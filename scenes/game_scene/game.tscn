@@ -1,21 +1,111 @@
-[gd_scene load_steps=12 format=3 uid="uid://dvqw0lu6ju12p"]
+[gd_scene load_steps=36 format=3 uid="uid://dvqw0lu6ju12p"]
 
 [ext_resource type="Script" path="res://scenes/game_scene/game.gd" id="1_3sko8"]
+[ext_resource type="Script" path="res://scenes/game_scene/background.gd" id="2_7ulqd"]
 [ext_resource type="PackedScene" uid="uid://b2cbp485obcer" path="res://scenes/game_scene/board/board.tscn" id="4_w5u2l"]
+[ext_resource type="Texture2D" uid="uid://gtcp0bv8kudr" path="res://assets/art/misc/circle.png" id="5_o347i"]
 [ext_resource type="Script" path="res://scenes/game_scene/main_camera.gd" id="6_2y2ed"]
+[ext_resource type="Script" path="res://scenes/game_scene/background_particles.gd" id="6_wedpv"]
+[ext_resource type="Script" path="res://classes/exponential_damper.gd" id="7_fhy3a"]
+[ext_resource type="Script" path="res://classes/property_path/path_chain.gd" id="8_1qftq"]
+[ext_resource type="Script" path="res://classes/property_path/path_node.gd" id="8_oxnsv"]
 [ext_resource type="Script" path="res://scenes/game_scene/alert.gd" id="9_kh40w"]
+[ext_resource type="Script" path="res://classes/property_path/path.gd" id="9_vvut4"]
+[ext_resource type="Script" path="res://classes/property_path/path_property.gd" id="11_5prq0"]
 
-[sub_resource type="Gradient" id="Gradient_700et"]
-interpolation_color_space = 2
-colors = PackedColorArray(0.0587371, 0.0587371, 0.0587371, 1, 0.113046, 0.113046, 0.113046, 1)
+[sub_resource type="Gradient" id="Gradient_o347i"]
+colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 1)
 
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_o347i"]
-gradient = SubResource("Gradient_700et")
-width = 4
-height = 4
-use_hdr = true
-fill_from = Vector2(0, 1)
-fill_to = Vector2(0.299145, 0)
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_7ulqd"]
+gradient = SubResource("Gradient_o347i")
+
+[sub_resource type="Curve" id="Curve_oxnsv"]
+bake_resolution = 256
+_data = [Vector2(0, 0), 0.0, 4.0, 0, 0, Vector2(1, 0), -4.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_lnrhe"]
+curve = SubResource("Curve_oxnsv")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_tr8b4"]
+particle_flag_disable_z = true
+emission_shape = 3
+emission_box_extents = Vector3(540, 1320, 0)
+direction = Vector3(0, -1, 0)
+spread = 180.0
+initial_velocity_max = 30.0
+gravity = Vector3(0, 0, 0)
+scale_min = 0.0
+scale_max = 0.3
+scale_curve = SubResource("CurveTexture_lnrhe")
+color = Color(1, 1, 1, 0.04)
+color_initial_ramp = SubResource("GradientTexture1D_7ulqd")
+turbulence_noise_strength = 20.0
+
+[sub_resource type="Resource" id="Resource_1qftq"]
+script = ExtResource("8_oxnsv")
+node_path = NodePath("..")
+metadata/_custom_type_script = ExtResource("8_oxnsv")
+
+[sub_resource type="Resource" id="Resource_vvut4"]
+script = ExtResource("11_5prq0")
+property_name = &"speed_scale"
+metadata/_custom_type_script = ExtResource("11_5prq0")
+
+[sub_resource type="Resource" id="Resource_4ybgr"]
+script = ExtResource("8_1qftq")
+paths = Array[ExtResource("9_vvut4")]([SubResource("Resource_1qftq"), SubResource("Resource_vvut4")])
+metadata/_custom_type_script = ExtResource("8_1qftq")
+
+[sub_resource type="Resource" id="Resource_lo7qv"]
+script = ExtResource("8_oxnsv")
+node_path = NodePath("..")
+metadata/_custom_type_script = ExtResource("8_oxnsv")
+
+[sub_resource type="Resource" id="Resource_xpges"]
+script = ExtResource("11_5prq0")
+property_name = &"base_speed_scale"
+metadata/_custom_type_script = ExtResource("11_5prq0")
+
+[sub_resource type="Resource" id="Resource_a30n7"]
+script = ExtResource("8_1qftq")
+paths = Array[ExtResource("9_vvut4")]([SubResource("Resource_lo7qv"), SubResource("Resource_xpges")])
+metadata/_custom_type_script = ExtResource("8_1qftq")
+
+[sub_resource type="Resource" id="Resource_iu41y"]
+script = ExtResource("8_oxnsv")
+node_path = NodePath("..")
+metadata/_custom_type_script = ExtResource("8_oxnsv")
+
+[sub_resource type="Resource" id="Resource_7ke7p"]
+script = ExtResource("11_5prq0")
+property_name = &"process_material"
+metadata/_custom_type_script = ExtResource("11_5prq0")
+
+[sub_resource type="Resource" id="Resource_d37l8"]
+script = ExtResource("11_5prq0")
+property_name = &"color"
+metadata/_custom_type_script = ExtResource("11_5prq0")
+
+[sub_resource type="Resource" id="Resource_5prq0"]
+script = ExtResource("8_1qftq")
+paths = Array[ExtResource("9_vvut4")]([SubResource("Resource_iu41y"), SubResource("Resource_7ke7p"), SubResource("Resource_d37l8")])
+metadata/_custom_type_script = ExtResource("8_1qftq")
+
+[sub_resource type="Resource" id="Resource_h5e52"]
+script = ExtResource("8_oxnsv")
+node_path = NodePath("..")
+metadata/_custom_type_script = ExtResource("8_oxnsv")
+
+[sub_resource type="Resource" id="Resource_25ou5"]
+script = ExtResource("11_5prq0")
+property_name = &"base_particle_color"
+metadata/_custom_type_script = ExtResource("11_5prq0")
+
+[sub_resource type="Resource" id="Resource_mbn71"]
+script = ExtResource("8_1qftq")
+paths = Array[ExtResource("9_vvut4")]([SubResource("Resource_h5e52"), SubResource("Resource_25ou5")])
+metadata/_custom_type_script = ExtResource("8_1qftq")
 
 [sub_resource type="LabelSettings" id="LabelSettings_calj3"]
 font_size = 100
@@ -40,14 +130,18 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 540.0
+offset_top = 768.0
+offset_right = 540.0
+offset_bottom = 768.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_3sko8")
 GAMEBOARD = NodePath("Board")
 MOVE_INTERVAL = 0.05
-line_clear_test = PackedInt32Array(0, 1, 5)
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="Background" type="ColorRect" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = -1
 anchor_left = -1.0
@@ -56,7 +150,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = SubResource("GradientTexture2D_o347i")
+color = Color(0.03, 0.03, 0.03, 1)
+script = ExtResource("2_7ulqd")
 
 [node name="Board" parent="." instance=ExtResource("4_w5u2l")]
 unique_name_in_owner = true
@@ -73,22 +168,43 @@ unique_name_in_owner = true
 position = Vector2(0, 552)
 script = ExtResource("6_2y2ed")
 
-[node name="Timer" type="Timer" parent="MainCamera"]
-one_shot = true
+[node name="BackgroundParticles" type="GPUParticles2D" parent="MainCamera"]
+unique_name_in_owner = true
+amount = 250
+lifetime = 20.0
+preprocess = 10.0
+visibility_rect = Rect2(-1907.7, -2650.11, 3765.76, 5454.75)
+trail_lifetime = 1.0
+texture = ExtResource("5_o347i")
+process_material = SubResource("ParticleProcessMaterial_tr8b4")
+script = ExtResource("6_wedpv")
+
+[node name="SpeedScaleDamper" type="Node" parent="MainCamera/BackgroundParticles"]
+script = ExtResource("7_fhy3a")
+decay = 2.0
+source_property = SubResource("Resource_4ybgr")
+target_property = SubResource("Resource_a30n7")
+metadata/_custom_type_script = ExtResource("7_fhy3a")
+
+[node name="ColorDamper" type="Node" parent="MainCamera/BackgroundParticles"]
+script = ExtResource("7_fhy3a")
+decay = 2.0
+source_property = SubResource("Resource_5prq0")
+target_property = SubResource("Resource_mbn71")
+metadata/_custom_type_script = ExtResource("7_fhy3a")
 
 [node name="LinesCleared" type="Label" parent="."]
 unique_name_in_owner = true
-visible = false
 layout_mode = 1
 offset_left = -320.0
 offset_top = 640.0
 offset_right = 320.0
 offset_bottom = 1071.0
 size_flags_horizontal = 4
-text = "lines
-0"
+text = "lines 0"
 label_settings = SubResource("LabelSettings_calj3")
-horizontal_alignment = 1
+horizontal_alignment = 2
+vertical_alignment = 2
 
 [node name="Hold" type="Label" parent="."]
 unique_name_in_owner = true
@@ -134,5 +250,3 @@ label_settings = SubResource("LabelSettings_7jtj5")
 script = ExtResource("9_kh40w")
 scale_curve = SubResource("Curve_700et")
 modulate_curve = SubResource("Curve_o347i")
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
