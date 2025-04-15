@@ -1,7 +1,7 @@
 @tool
 extends Label
 
-
+@warning_ignore("unused_private_class_variable")
 @export_tool_button("Animate", "AnimatedSprite2D") var animate_btn = animate
 @export var scale_curve: Curve
 @export var modulate_curve: Curve

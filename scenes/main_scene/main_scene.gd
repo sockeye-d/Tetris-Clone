@@ -66,7 +66,7 @@ func switch_to_scene(to_scene: PackedScene, modal: bool = false) -> void:
 func switch_back() -> void:
 	if scene_stack.size() < 1:
 		await transition.transition_begin()
-		await get_tree().create_timer(0.1)
+		await get_tree().create_timer(0.1).timeout
 		get_tree().quit()
 		return
 	

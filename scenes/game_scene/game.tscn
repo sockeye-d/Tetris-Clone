@@ -1,17 +1,17 @@
 [gd_scene load_steps=36 format=3 uid="uid://dvqw0lu6ju12p"]
 
-[ext_resource type="Script" path="res://scenes/game_scene/game.gd" id="1_3sko8"]
-[ext_resource type="Script" path="res://scenes/game_scene/background.gd" id="2_7ulqd"]
+[ext_resource type="Script" uid="uid://f1bgqajgqpe0" path="res://scenes/game_scene/game.gd" id="1_3sko8"]
+[ext_resource type="Script" uid="uid://02xdl6beg1vx" path="res://scenes/game_scene/background.gd" id="2_7ulqd"]
 [ext_resource type="PackedScene" uid="uid://b2cbp485obcer" path="res://scenes/game_scene/board/board.tscn" id="4_w5u2l"]
 [ext_resource type="Texture2D" uid="uid://gtcp0bv8kudr" path="res://assets/art/misc/circle.png" id="5_o347i"]
-[ext_resource type="Script" path="res://scenes/game_scene/main_camera.gd" id="6_2y2ed"]
-[ext_resource type="Script" path="res://scenes/game_scene/background_particles.gd" id="6_wedpv"]
-[ext_resource type="Script" path="res://classes/exponential_damper.gd" id="7_fhy3a"]
-[ext_resource type="Script" path="res://classes/property_path/path_chain.gd" id="8_1qftq"]
-[ext_resource type="Script" path="res://classes/property_path/path_node.gd" id="8_oxnsv"]
-[ext_resource type="Script" path="res://scenes/game_scene/alert.gd" id="9_kh40w"]
-[ext_resource type="Script" path="res://classes/property_path/path.gd" id="9_vvut4"]
-[ext_resource type="Script" path="res://classes/property_path/path_property.gd" id="11_5prq0"]
+[ext_resource type="Script" uid="uid://bxs7atsfaj2ai" path="res://scenes/game_scene/main_camera.gd" id="6_2y2ed"]
+[ext_resource type="Script" uid="uid://dpgiltvw0jouu" path="res://scenes/game_scene/background_particles.gd" id="6_wedpv"]
+[ext_resource type="Script" uid="uid://bvweti7x51v5g" path="res://classes/exponential_damper.gd" id="7_fhy3a"]
+[ext_resource type="Script" uid="uid://d02ne0bhph6ae" path="res://classes/property_path/path_chain.gd" id="8_1qftq"]
+[ext_resource type="Script" uid="uid://cpctdgtlk0rat" path="res://classes/property_path/path_node.gd" id="8_oxnsv"]
+[ext_resource type="Script" uid="uid://8x0okkhhy5ic" path="res://scenes/game_scene/alert.gd" id="9_kh40w"]
+[ext_resource type="Script" uid="uid://ctxh7jdo8tj2n" path="res://classes/property_path/path.gd" id="9_vvut4"]
+[ext_resource type="Script" uid="uid://cg6sxnbr607hm" path="res://classes/property_path/path_property.gd" id="11_5prq0"]
 
 [sub_resource type="Gradient" id="Gradient_o347i"]
 colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 1)
@@ -171,11 +171,11 @@ script = ExtResource("6_2y2ed")
 [node name="BackgroundParticles" type="GPUParticles2D" parent="MainCamera"]
 unique_name_in_owner = true
 amount = 250
+texture = ExtResource("5_o347i")
 lifetime = 20.0
 preprocess = 10.0
 visibility_rect = Rect2(-1907.7, -2650.11, 3765.76, 5454.75)
 trail_lifetime = 1.0
-texture = ExtResource("5_o347i")
 process_material = SubResource("ParticleProcessMaterial_tr8b4")
 script = ExtResource("6_wedpv")
 
@@ -184,14 +184,14 @@ script = ExtResource("7_fhy3a")
 decay = 2.0
 source_property = SubResource("Resource_4ybgr")
 target_property = SubResource("Resource_a30n7")
-metadata/_custom_type_script = ExtResource("7_fhy3a")
+metadata/_custom_type_script = "uid://bvweti7x51v5g"
 
 [node name="ColorDamper" type="Node" parent="MainCamera/BackgroundParticles"]
 script = ExtResource("7_fhy3a")
 decay = 2.0
 source_property = SubResource("Resource_5prq0")
 target_property = SubResource("Resource_mbn71")
-metadata/_custom_type_script = ExtResource("7_fhy3a")
+metadata/_custom_type_script = "uid://bvweti7x51v5g"
 
 [node name="LinesCleared" type="Label" parent="."]
 unique_name_in_owner = true

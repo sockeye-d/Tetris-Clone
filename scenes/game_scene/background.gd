@@ -7,6 +7,8 @@ class_name MainGameBackground extends ColorRect
 @export var pulse_decay: float = 5.0
 
 @export var test_pulse_fac: float = 1.0
+
+@warning_ignore("unused_private_class_variable")
 @export_tool_button("Test pulse") var test_pulse = func():
 	pulse(test_pulse_fac)
 

@@ -3,11 +3,11 @@
 [ext_resource type="World3D" uid="uid://cmcwflhfcc64o" path="res://scenes/game_scene/game_world.tres" id="1_miq82"]
 [ext_resource type="PackedScene" uid="uid://dvqw0lu6ju12p" path="res://scenes/game_scene/game.tscn" id="2_j5hk1"]
 [ext_resource type="Texture2D" uid="uid://c1f7kec51k5kr" path="res://assets/art/icons/button_left.svg" id="3_ueiaa"]
-[ext_resource type="Script" path="res://classes/ui/joystick_button.gd" id="4_daj04"]
+[ext_resource type="Script" uid="uid://vsrtgmwwarkk" path="res://classes/ui/joystick_button.gd" id="4_daj04"]
 [ext_resource type="Texture2D" uid="uid://bvwee6vut4t2x" path="res://assets/art/icons/button_left_pressed.svg" id="5_jytbd"]
 [ext_resource type="Texture2D" uid="uid://dvt4hq1dotrwl" path="res://assets/art/icons/button_right.svg" id="5_mlphb"]
 [ext_resource type="Texture2D" uid="uid://dvu744pck4rh7" path="res://assets/art/icons/button_hard_drop.svg" id="6_opqoc"]
-[ext_resource type="Script" path="res://classes/haptic_feedbacker.gd" id="6_v03ia"]
+[ext_resource type="Script" uid="uid://is6ebom3qagn" path="res://classes/haptic_feedbacker.gd" id="6_v03ia"]
 [ext_resource type="Texture2D" uid="uid://d1n7shn3shag" path="res://assets/art/icons/button_drop.svg" id="7_bpcsf"]
 [ext_resource type="Texture2D" uid="uid://cbfagd3tkaty" path="res://assets/art/icons/button_right_pressed.svg" id="7_iprv4"]
 [ext_resource type="Texture2D" uid="uid://ltimcgvb0c8v" path="res://assets/art/icons/button_rotate_ccw.svg" id="8_3d2pr"]
@@ -16,7 +16,7 @@
 [ext_resource type="Texture2D" uid="uid://kfic3juu18t" path="res://assets/art/icons/button_hold.svg" id="10_snaye"]
 [ext_resource type="Texture2D" uid="uid://bntmky7rm0kli" path="res://assets/art/icons/button_pause.svg" id="11_hqmgi"]
 [ext_resource type="Texture2D" uid="uid://ul66ykr0wnr6" path="res://assets/art/icons/button_drop_pressed.svg" id="11_hunbn"]
-[ext_resource type="Script" path="res://scenes/game_scene/pause_button.gd" id="12_3di6p"]
+[ext_resource type="Script" uid="uid://u1ipv2sovcbs" path="res://scenes/game_scene/pause_button.gd" id="12_3di6p"]
 [ext_resource type="Texture2D" uid="uid://bdqui2uu7rvo4" path="res://assets/art/icons/button_rotate_ccw_pressed.svg" id="13_hn7ev"]
 [ext_resource type="Texture2D" uid="uid://bkql5ykj5mfqg" path="res://assets/art/icons/button_rotate_cw_pressed.svg" id="15_ojnix"]
 [ext_resource type="Texture2D" uid="uid://cv0acyy07hjcc" path="res://assets/art/icons/button_hold_pressed.svg" id="16_ojnix"]
@@ -47,7 +47,6 @@ world_3d = ExtResource("1_miq82")
 handle_input_locally = false
 gui_snap_controls_to_pixels = false
 size = Vector2i(1080, 2640)
-render_target_update_mode = 4
 
 [node name="MainGame" parent="SubViewportContainer/SubViewport" instance=ExtResource("2_j5hk1")]
 
@@ -81,7 +80,7 @@ pressed_texture = ExtResource("5_jytbd")
 [node name="HapticFeedbacker" type="Node" parent="LeftJoystickContainer/MoveLeftButton"]
 script = ExtResource("6_v03ia")
 duration_ms = 50
-metadata/_custom_type_script = ExtResource("6_v03ia")
+metadata/_custom_type_script = "uid://is6ebom3qagn"
 
 [node name="MoveRightButton" type="TextureRect" parent="LeftJoystickContainer"]
 layout_mode = 1
@@ -251,7 +250,7 @@ pressed_texture = ExtResource("19_v03ia")
 
 [node name="HapticFeedbacker" type="Node" parent="PauseButton"]
 script = ExtResource("6_v03ia")
-metadata/_custom_type_script = ExtResource("6_v03ia")
+metadata/_custom_type_script = "uid://is6ebom3qagn"
 
 [connection signal="pressed" from="LeftJoystickContainer/MoveLeftButton" to="LeftJoystickContainer/MoveLeftButton/HapticFeedbacker" method="vibrate"]
 [connection signal="pressed" from="LeftJoystickContainer/MoveRightButton" to="LeftJoystickContainer/MoveRightButton/HapticFeedbacker" method="vibrate"]

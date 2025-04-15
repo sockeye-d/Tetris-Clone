@@ -9,8 +9,11 @@ const TRANS_DURATION := 1.0
 signal transition_completed
 
 
+@warning_ignore("unused_private_class_variable")
 @export_tool_button("Scene transition begin") var __ := transition_begin
+@warning_ignore("unused_private_class_variable")
 @export_tool_button("Scene transition middle") var ___ := transition_middle
+@warning_ignore("unused_private_class_variable")
 @export_tool_button("Scene transition end") var ____ := transition_end
 
 

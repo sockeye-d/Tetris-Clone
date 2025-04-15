@@ -18,8 +18,9 @@ config/icon="res://assets/art/misc/icon192x192.png"
 
 [autoload]
 
-Main="*res://scenes/main_scene/main_scene.tscn"
 HapticsManager="*res://classes/autoloads/haptics_manager.gd"
+GameInfo="*res://classes/autoloads/game_info.gd"
+Main="*res://scenes/main_scene/main_scene.tscn"
 
 [display]
 

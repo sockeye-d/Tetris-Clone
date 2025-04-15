@@ -2,6 +2,7 @@
 extends GPUParticles2D
 
 
+@warning_ignore("unused_private_class_variable")
 @export_tool_button("Test pulse") var test_pulse = pulse
 @export var base_speed_scale := 1.0
 @export var base_particle_color := Color(1.0, 1.0, 1.0, 0.04)

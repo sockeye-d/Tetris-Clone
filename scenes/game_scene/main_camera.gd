@@ -1,6 +1,7 @@
 @tool
 class_name MainCamera extends Camera2D
 
+@warning_ignore("unused_private_class_variable")
 @export_tool_button("bounce") var test := func():
 	move(Vector2(0.0, -30.0), 1.0)
 

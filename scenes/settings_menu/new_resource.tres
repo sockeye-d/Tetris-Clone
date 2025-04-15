@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="NestedSettingItem" load_steps=2 format=3 uid="uid://dvycl61q0a5w4"]
+
+[ext_resource type="Script" path="res://classes/settings/nested_setting_item.gd" id="1_ul006"]
+
+[resource]
+script = ExtResource("1_ul006")
+setting_value = Dictionary[String, Object]({})
+metadata/_custom_type_script = ExtResource("1_ul006")

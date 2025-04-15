@@ -2,6 +2,7 @@
 extends Control
 
 signal death
+signal piece_locked(cleared_lines: PackedInt32Array, current_combo: int)
 
 @export var GAMEBOARD: TileMap
 @export var HALF_BOARD_SIZE: Vector2i = Vector2i(5, 10)
@@ -173,6 +174,7 @@ func _process(delta: float) -> void:
 			old_bag_piece = bag[0]
 			old_hold = hold
 			lines_cleared_label.text = "lines %s" % lines_cleared
+			GameInfo.lines_cleared = lines_cleared
 	else:
 		var board_size := Vector2(GAMEBOARD.tile_set.tile_size * HALF_BOARD_SIZE) * GAMEBOARD.scale * 2.0
 		for label: Label in [next_label, hold_label, lines_cleared_label]:
@@ -192,7 +194,10 @@ func _process_current_piece(delta: float):
 				current_piece.position.y -= 1
 				fall_lock += 1
 				if fall_lock > FALL_LOCK_MAX:
-					_lock_piece()
+					var cleared_lines := _lock_piece()
+					if cleared_lines:
+						background.pulse(remap(cleared_lines.size(), 0.0, 4.0, 0.0, 0.5))
+						background_particles.pulse(cleared_lines.size())
 			else:
 				fall_lock = 0
 		if not current_piece == null:
@@ -212,7 +217,7 @@ func _process_current_piece(delta: float):
 				else:
 					current_piece = candidate
 			
-			var move_axis := Input.get_axis("move_left", "move_right")
+			var move_axis := int(Input.get_axis("move_left", "move_right"))
 			
 			if move_axis and (move_time > (FIRST_MOVE_INTERVAL if move_chain <= 1 else MOVE_INTERVAL) or move_time < 0.0):
 				current_piece.position.x += move_axis
@@ -342,16 +347,16 @@ func _2d_index(array: Array, pos: Vector2i):
 	return array[pos.y][pos.x]
 
 
-func _rotate_position(vector: Vector2i, size: Vector2i , direction: int) -> Vector2i:
+func _rotate_position(vector: Vector2i, psize: Vector2i , direction: int) -> Vector2i:
 	match direction % 4:
 		0:
 			return vector
 		1:
-			return Vector2i(vector.y, size.y - vector.x)
+			return Vector2i(vector.y, psize.y - vector.x)
 		2:
-			return Vector2i(size.x - vector.x, size.y - vector.y)
+			return Vector2i(psize.x - vector.x, psize.y - vector.y)
 		3:
-			return Vector2i(size.y - vector.y, vector.x)
+			return Vector2i(psize.y - vector.y, vector.x)
 	return vector
 
 
@@ -511,6 +516,8 @@ func _lock_piece() -> PackedInt32Array:
 			combo_text.animate()
 		var vibration_strength := 1.0 - exp(-cleared_lines.size() * 0.35 - combo + 1)
 		Input.vibrate_handheld(300, vibration_strength)
+		
+		piece_locked.emit(cleared_lines, combo)
 	else:
 		combo = 0
 
